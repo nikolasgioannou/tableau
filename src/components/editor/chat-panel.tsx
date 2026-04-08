@@ -171,16 +171,19 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbMessages]);
 
-  // Trigger slide refetch whenever tool calls appear
-  const lastToolCountRef = useRef(0);
+  // Trigger slide refetch whenever any tool part appears or changes state
+  const toolSignatureRef = useRef("");
   useEffect(() => {
-    let toolCount = 0;
-    for (const msg of displayMessages) {
-      toolCount += msg.parts.filter((p) => p.kind === "tool").length;
-    }
-    if (toolCount > lastToolCountRef.current) {
+    const signature = displayMessages
+      .flatMap((msg) =>
+        msg.parts
+          .filter((p): p is DisplayPart & { kind: "tool" } => p.kind === "tool")
+          .map((p) => `${p.id}:${String(p.done)}`),
+      )
+      .join(",");
+    if (signature !== toolSignatureRef.current && signature !== "") {
       onSlidesChanged();
-      lastToolCountRef.current = toolCount;
+      toolSignatureRef.current = signature;
     }
   }, [displayMessages, onSlidesChanged]);
 
