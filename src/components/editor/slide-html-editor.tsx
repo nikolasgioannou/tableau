@@ -1,17 +1,45 @@
+import { html as htmlLang } from "@codemirror/lang-html";
+import { oneDark } from "@codemirror/theme-one-dark";
+import { EditorView } from "@codemirror/view";
+import CodeMirror from "@uiw/react-codemirror";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "~/lib/cn";
 
 type SlideHtmlEditorProps = {
   html: string;
   onUpdate: (html: string) => void;
 };
 
+const baseTheme = EditorView.theme({
+  "&": {
+    height: "100%",
+    fontSize: "12px",
+  },
+  ".cm-scroller": {
+    fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+  },
+});
+
+const extensions = [htmlLang(), baseTheme];
+const darkExtensions = [htmlLang(), oneDark, baseTheme];
+
 export function SlideHtmlEditor({ html, onUpdate }: SlideHtmlEditorProps) {
   const [localValue, setLocalValue] = useState(html);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const prevHtmlRef = useRef(html);
+  const [isDark, setIsDark] = useState(false);
 
-  // Reset local state when the active slide changes (external html prop changes)
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     if (html !== prevHtmlRef.current) {
       setLocalValue(html);
@@ -31,43 +59,22 @@ export function SlideHtmlEditor({ html, onUpdate }: SlideHtmlEditorProps) {
     [onUpdate],
   );
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Tab") {
-        e.preventDefault();
-        const target = e.currentTarget;
-        const start = target.selectionStart;
-        const end = target.selectionEnd;
-        const newValue =
-          localValue.substring(0, start) + "  " + localValue.substring(end);
-        setLocalValue(newValue);
-        prevHtmlRef.current = newValue;
-
-        // Set cursor position after React re-renders
-        requestAnimationFrame(() => {
-          target.selectionStart = target.selectionEnd = start + 2;
-        });
-
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-          onUpdate(newValue);
-        }, 600);
-      }
-    },
-    [localValue, onUpdate],
-  );
-
   return (
-    <textarea
-      value={localValue}
-      onChange={(e) => handleChange(e.target.value)}
-      onKeyDown={handleKeyDown}
-      className={cn(
-        "h-full w-full resize-none border-t border-border-default bg-surface-subtle p-3 font-mono text-xs text-text-primary",
-        "placeholder:text-text-disabled",
-      )}
-      placeholder="Slide HTML..."
-      spellCheck={false}
-    />
+    <div className="h-full overflow-auto">
+      <CodeMirror
+        value={localValue}
+        onChange={handleChange}
+        extensions={isDark ? darkExtensions : extensions}
+        theme={isDark ? "dark" : "light"}
+        basicSetup={{
+          lineNumbers: true,
+          foldGutter: true,
+          highlightActiveLine: true,
+          indentOnInput: true,
+          tabSize: 2,
+        }}
+        className="h-full text-xs"
+      />
+    </div>
   );
 }
