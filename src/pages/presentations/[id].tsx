@@ -153,7 +153,7 @@ export default function PresentationEditorPage() {
   return (
     <>
       <Head>
-        <title>{presentation.name} — Tableau</title>
+        <title>{presentation.name} | Tableau</title>
       </Head>
       <div className="flex h-screen flex-col">
         {/* Top bar */}

@@ -43,7 +43,7 @@ export default function PresentationsPage() {
   return (
     <>
       <Head>
-        <title>Presentations — Tableau</title>
+        <title>Presentations | Tableau</title>
       </Head>
       <div className="p-8">
         <div className="mb-8 flex items-center justify-between">

@@ -41,7 +41,7 @@ export default function SettingsPage() {
   return (
     <>
       <Head>
-        <title>Settings — Tableau</title>
+        <title>Settings | Tableau</title>
       </Head>
       <div className="flex h-full justify-center overflow-y-auto py-12">
         <div className="w-full max-w-2xl px-6">
