@@ -37,10 +37,10 @@ export function SlideStrip({
             <button
               onClick={() => onSelectSlide(slide.id)}
               className={cn(
-                "relative flex-shrink-0 cursor-pointer rounded-md border-2 transition-all hover:border-border-strong",
+                "relative flex-shrink-0 cursor-pointer rounded-md border-2 transition-all",
                 activeSlideId === slide.id
                   ? "border-accent-default"
-                  : "border-border-default",
+                  : "border-border-default hover:border-border-strong",
               )}
             >
               <SlideFrame
