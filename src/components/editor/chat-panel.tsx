@@ -286,15 +286,15 @@ export function ChatPanel({
   return (
     <div className="border-border-default bg-surface-base flex h-full w-[360px] flex-shrink-0 flex-col border-l">
       {/* Messages */}
+      {displayMessages.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-text-tertiary text-center text-sm">
+            Describe the slides you want to create...
+          </p>
+        </div>
+      ) : (
       <div className="flex flex-1 flex-col-reverse overflow-y-auto">
         <div className="flex flex-col gap-3 p-4">
-          {displayMessages.length === 0 && (
-            <div className="flex flex-1 items-center justify-center py-20">
-              <p className="text-text-tertiary text-center text-sm">
-                Describe the slides you want to create...
-              </p>
-            </div>
-          )}
           {displayMessages.map((msg) => (
             <div key={msg.id}>
               {msg.role === "user" ? (
@@ -352,6 +352,7 @@ export function ChatPanel({
           )}
         </div>
       </div>
+      )}
 
       {/* Input */}
       <div className="border-border-default border-t p-3">
