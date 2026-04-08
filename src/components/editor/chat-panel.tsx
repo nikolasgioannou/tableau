@@ -17,6 +17,7 @@ import { type UIMessage, DefaultChatTransport } from "ai";
 type ChatPanelProps = {
   presentationId: string;
   onSlidesChanged: () => void;
+  onSlideSelect: (index: number) => void;
 };
 
 type StreamingToolPart = {
@@ -29,7 +30,13 @@ type StreamingToolPart = {
 
 type DisplayPart =
   | { kind: "text"; text: string }
-  | { kind: "tool"; id: string; label: string; done: boolean };
+  | {
+      kind: "tool";
+      id: string;
+      label: string;
+      done: boolean;
+      slideIndex?: number;
+    };
 
 type DisplayMessage = {
   id: string;
@@ -40,17 +47,21 @@ type DisplayMessage = {
 function getToolLabel(
   toolName: string,
   input: Record<string, unknown> | undefined,
+  done: boolean,
 ): string {
   if (toolName === "updateSlide" && input?.slideIndex != null) {
-    return `Updated slide ${(input.slideIndex as number) + 1}`;
+    const n = (input.slideIndex as number) + 1;
+    return done ? `Updated slide ${n}` : `Updating slide ${n}`;
   } else if (toolName === "bulkUpdateSlides" && Array.isArray(input?.updates)) {
-    return `Bulk updated ${input.updates.length} slides`;
+    const c = input.updates.length;
+    return done ? `Bulk updated ${c} slides` : `Updating ${c} slides`;
   } else if (toolName === "addSlide") {
-    return "Added new slide";
+    return done ? "Added new slide" : "Adding new slide";
   } else if (toolName === "deleteSlide" && input?.slideIndex != null) {
-    return `Deleted slide ${(input.slideIndex as number) + 1}`;
+    const n = (input.slideIndex as number) + 1;
+    return done ? `Deleted slide ${n}` : `Deleting slide ${n}`;
   } else if (toolName === "reorderSlides") {
-    return "Reordered slides";
+    return done ? "Reordered slides" : "Reordering slides";
   }
   return toolName;
 }
@@ -65,14 +76,20 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
       } else if (part.type.startsWith("tool-")) {
         const p = part as StreamingToolPart;
         const toolName = p.toolName ?? part.type.replace("tool-", "");
+        const isDone =
+          p.state === "result" ||
+          p.state === "output" ||
+          p.state === "output-available";
+        const slideIndex =
+          p.input?.slideIndex != null
+            ? (p.input.slideIndex as number)
+            : undefined;
         parts.push({
           kind: "tool",
           id: p.toolCallId,
-          label: getToolLabel(toolName, p.input ?? {}),
-          done:
-            p.state === "result" ||
-            p.state === "output" ||
-            p.state === "output-available",
+          label: getToolLabel(toolName, p.input, isDone),
+          done: isDone,
+          slideIndex,
         });
       }
     }
@@ -85,7 +102,11 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
   });
 }
 
-export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
+export function ChatPanel({
+  presentationId,
+  onSlidesChanged,
+  onSlideSelect,
+}: ChatPanelProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
@@ -183,21 +204,29 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbMessages, presentationId]);
 
-  // Trigger slide refetch whenever any tool part appears or changes state
+  // Trigger slide refetch and jump to affected slide when tools execute
   const toolSignatureRef = useRef("");
   useEffect(() => {
-    const signature = displayMessages
-      .flatMap((msg) =>
-        msg.parts
-          .filter((p): p is DisplayPart & { kind: "tool" } => p.kind === "tool")
-          .map((p) => `${p.id}:${String(p.done)}`),
-      )
+    const toolParts = displayMessages.flatMap((msg) =>
+      msg.parts.filter(
+        (p): p is DisplayPart & { kind: "tool" } => p.kind === "tool",
+      ),
+    );
+    const signature = toolParts
+      .map((p) => `${p.id}:${String(p.done)}`)
       .join(",");
     if (signature !== toolSignatureRef.current && signature !== "") {
       onSlidesChanged();
+      // Jump to the most recently affected slide
+      const lastToolWithSlide = [...toolParts]
+        .reverse()
+        .find((p) => p.slideIndex != null);
+      if (lastToolWithSlide?.slideIndex != null) {
+        onSlideSelect(lastToolWithSlide.slideIndex);
+      }
       toolSignatureRef.current = signature;
     }
-  }, [displayMessages, onSlidesChanged]);
+  }, [displayMessages, onSlidesChanged, onSlideSelect]);
 
   const handleSend = useCallback(async () => {
     const text = inputValue.trim();

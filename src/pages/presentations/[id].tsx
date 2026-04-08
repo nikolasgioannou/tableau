@@ -97,6 +97,14 @@ export default function PresentationEditorPage() {
     void utils.presentation.getById.invalidate({ id: presentationId });
   }, [utils.presentation.getById, presentationId]);
 
+  const handleSlideSelectByIndex = useCallback(
+    (index: number) => {
+      const slide = presentation?.slides.find((s) => s.index === index);
+      if (slide) setActiveSlideId(slide.id);
+    },
+    [presentation?.slides],
+  );
+
   const handleUpdateSlide = useCallback(
     (fields: { head: string; body: string }) => {
       if (!activeSlide) return;
@@ -268,6 +276,7 @@ export default function PresentationEditorPage() {
           <ChatPanel
             presentationId={presentationId}
             onSlidesChanged={handleSlidesChanged}
+            onSlideSelect={handleSlideSelectByIndex}
           />
         </div>
       </div>
