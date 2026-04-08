@@ -1,5 +1,12 @@
 import Head from "next/head";
 import { useTheme, type ThemeMode } from "~/hooks/use-theme";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 
 function SettingsRow({
   label,
@@ -51,14 +58,15 @@ export default function SettingsPage() {
               description="Select your preferred color scheme"
               isLast
             >
-              <select
-                value={mode}
-                onChange={(e) => setTheme(e.target.value as ThemeMode)}
-                className="rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-default"
-              >
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-              </select>
+              <Select value={mode} onValueChange={(v) => setTheme(v as ThemeMode)}>
+                <SelectTrigger className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">Light</SelectItem>
+                  <SelectItem value="dark">Dark</SelectItem>
+                </SelectContent>
+              </Select>
             </SettingsRow>
           </div>
         </div>
