@@ -1,29 +1,73 @@
-# Create T3 App
+# Tableau
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+AI-powered presentation builder. Describe what you want and the AI builds it — slide by slide, with full design consistency.
 
-## What's next? How do I make an app with this?
+## Stack
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- **Framework:** Next.js (Pages Router), TypeScript, Tailwind CSS
+- **API:** tRPC, Vercel AI SDK (Anthropic Claude)
+- **Database:** Prisma + SQLite
+- **UI:** Radix UI primitives, CodeMirror, Lucide icons
+- **Runtime:** Bun
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Getting Started
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+```bash
+# Install dependencies
+bun install
 
-## Learn More
+# Copy environment variables
+cp .env.example .env
+# Add your ANTHROPIC_API_KEY to .env
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+# Push database schema
+bun run db:push
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+# Start dev server
+bun dev
+```
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## How do I deploy this?
+## Project Structure
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+```
+src/
+  components/
+    ui/           # Design system (Button, Dialog, Select, Tabs, etc.)
+    editor/       # Editor components (ChatPanel, SlidePreview, SlideStrip, etc.)
+    layout/       # AppShell, Sidebar
+    slide-frame.tsx  # Iframe-based slide renderer
+  pages/
+    presentations/   # List + editor pages
+    settings.tsx     # Theme settings
+    api/
+      ai/            # AI chat endpoint (streaming)
+      export/        # PDF export via Puppeteer
+      upload.ts      # Image upload
+      trpc/          # tRPC handler
+  server/
+    api/routers/     # tRPC routers (presentation, slide, chat)
+  hooks/             # useTheme
+  lib/               # cn utility, AI client
+  styles/            # Design tokens (HSL-based, light/dark)
+```
+
+## Key Concepts
+
+- **Slides** have a `head` (font links, etc.) and `body` (visible content). Tailwind CSS is loaded via CDN in every slide iframe.
+- **Chat** is persisted to the database. The AI has tools to create, update, delete, and reorder slides. Tool calls are stored per-step to maintain correct message ordering.
+- **Streaming** uses the AI SDK's `smoothStream` for word-by-word output. Slide previews update in real-time as the AI executes tools.
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `bun dev` | Start dev server (Turbopack) |
+| `bun run build` | Production build |
+| `bun run db:push` | Push Prisma schema to database |
+| `bun run db:studio` | Open Prisma Studio |
+| `bun run lint` | Run ESLint |
+| `bun run format:write` | Run Prettier |
+| `bun run typecheck` | Run TypeScript checks |
+| `bun run test` | Run Vitest tests |
