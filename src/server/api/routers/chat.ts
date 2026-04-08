@@ -13,4 +13,12 @@ export const chatRouter = createTRPCRouter({
         },
       });
     }),
+
+  clear: publicProcedure
+    .input(z.object({ presentationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.chatMessage.deleteMany({
+        where: { presentationId: input.presentationId },
+      });
+    }),
 });

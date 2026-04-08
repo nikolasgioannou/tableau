@@ -1,4 +1,4 @@
-import { Ellipsis, Trash2 } from "lucide-react";
+import { Ellipsis, MessageSquareX, Trash2 } from "lucide-react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -67,10 +67,19 @@ export default function PresentationEditorPage() {
     onError: (err) => toast(err.message, "error"),
   });
 
+  const clearChatMutation = api.chat.clear.useMutation({
+    onSuccess: () => {
+      void utils.chat.getMessages.invalidate({ presentationId });
+      setChatKey((k) => k + 1);
+    },
+    onError: (err) => toast(err.message, "error"),
+  });
+
   const [activeSlideId, setActiveSlideId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [chatKey, setChatKey] = useState(0);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-select: pick first slide if none selected, or fix if active was deleted
@@ -197,6 +206,15 @@ export default function PresentationEditorPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
+                  onClick={() =>
+                    clearChatMutation.mutate({ presentationId })
+                  }
+                  className="gap-2"
+                >
+                  <MessageSquareX size={14} />
+                  Clear chat
+                </DropdownMenuItem>
+                <DropdownMenuItem
                   onClick={() => setShowDeleteConfirm(true)}
                   className="text-destructive-default focus:text-destructive-default gap-2"
                 >
@@ -274,6 +292,7 @@ export default function PresentationEditorPage() {
 
           {/* Right: chat */}
           <ChatPanel
+            key={chatKey}
             presentationId={presentationId}
             onSlidesChanged={handleSlidesChanged}
             onSlideSelect={handleSlideSelectByIndex}
