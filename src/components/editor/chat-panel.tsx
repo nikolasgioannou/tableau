@@ -354,7 +354,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             placeholder="Describe your slides..."
             disabled={isStreaming}
             rows={1}
-            className="max-h-[120px] min-h-[36px] flex-1 resize-none rounded-md border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-border-strong disabled:opacity-50"
+            className="max-h-[120px] min-h-[36px] flex-1 resize-none rounded-md border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-border-strong disabled:opacity-50"
           />
           <Button
             size="sm"

@@ -29,7 +29,7 @@ const ContextMenuItem = forwardRef<
   <ContextMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm text-text-primary outline-none transition-colors focus:bg-accent-subtle focus:text-accent-text data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm text-text-primary transition-colors focus:bg-accent-subtle focus:text-accent-text data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}
     {...props}

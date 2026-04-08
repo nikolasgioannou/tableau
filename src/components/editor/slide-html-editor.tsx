@@ -64,7 +64,7 @@ export function SlideHtmlEditor({ html, onUpdate }: SlideHtmlEditorProps) {
       onKeyDown={handleKeyDown}
       className={cn(
         "h-full w-full resize-none border-t border-border-default bg-surface-subtle p-3 font-mono text-xs text-text-primary",
-        "placeholder:text-text-disabled focus:outline-none",
+        "placeholder:text-text-disabled",
       )}
       placeholder="Slide HTML..."
       spellCheck={false}
