@@ -1,3 +1,4 @@
+import { Ellipsis } from "lucide-react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -6,6 +7,20 @@ import { SlideHtmlEditor } from "~/components/editor/slide-html-editor";
 import { SlidePreview } from "~/components/editor/slide-preview";
 import { SlideStrip } from "~/components/editor/slide-strip";
 import { Button } from "~/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { Input } from "~/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useToast } from "~/components/ui/toast";
@@ -30,6 +45,14 @@ export default function PresentationEditorPage() {
     onError: (err) => toast(err.message, "error"),
   });
 
+  const deletePresentationMutation = api.presentation.delete.useMutation({
+    onSuccess: async () => {
+      void utils.presentation.list.invalidate();
+      await router.push("/presentations");
+    },
+    onError: (err) => toast(err.message, "error"),
+  });
+
   const updateSlideMutation = api.slide.update.useMutation({
     onSuccess: () => {
       void utils.presentation.getById.invalidate({ id: presentationId });
@@ -47,6 +70,7 @@ export default function PresentationEditorPage() {
   const [activeSlideId, setActiveSlideId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Set active slide to first slide when data loads
@@ -158,9 +182,26 @@ export default function PresentationEditorPage() {
               </button>
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            Export PDF
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              Export PDF
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Ellipsis size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-destructive-default focus:text-destructive-default"
+                >
+                  Delete presentation
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Main content */}
@@ -223,6 +264,32 @@ export default function PresentationEditorPage() {
           />
         </div>
       </div>
+
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete presentation</DialogTitle>
+            <DialogDescription>
+              This will permanently delete this presentation and all its slides.
+              This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                deletePresentationMutation.mutate({ id: presentationId });
+                setShowDeleteConfirm(false);
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
