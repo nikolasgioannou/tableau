@@ -9,7 +9,6 @@ import {
   type KeyboardEvent,
 } from "react";
 import { Button } from "~/components/ui/button";
-import { ScrollArea } from "~/components/ui/scroll-area";
 import { useToast } from "~/components/ui/toast";
 import { api } from "~/utils/api";
 import { type UIMessage, DefaultChatTransport } from "ai";
@@ -19,16 +18,14 @@ type ChatPanelProps = {
   onSlidesChanged: () => void;
 };
 
+type DisplayPart =
+  | { kind: "text"; text: string }
+  | { kind: "tool"; id: string; label: string; done: boolean };
+
 type DisplayMessage = {
   id: string;
   role: "user" | "assistant";
-  text: string;
-  toolCalls: Array<{
-    id: string;
-    toolName: string;
-    label: string;
-    done: boolean;
-  }>;
+  parts: DisplayPart[];
 };
 
 function getToolLabel(toolName: string, input: Record<string, unknown>): string {
@@ -48,12 +45,11 @@ function getToolLabel(toolName: string, input: Record<string, unknown>): string 
 
 function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
   return messages.map((msg) => {
-    const textParts: string[] = [];
-    const toolCalls: DisplayMessage["toolCalls"] = [];
+    const parts: DisplayPart[] = [];
 
     for (const part of msg.parts) {
-      if (part.type === "text") {
-        textParts.push(part.text);
+      if (part.type === "text" && part.text) {
+        parts.push({ kind: "text", text: part.text });
       } else if (part.type.startsWith("tool-")) {
         const p = part as {
           type: string;
@@ -63,9 +59,9 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
           input?: Record<string, unknown>;
         };
         const toolName = p.toolName ?? part.type.replace("tool-", "");
-        toolCalls.push({
+        parts.push({
+          kind: "tool",
           id: p.toolCallId,
-          toolName,
           label: getToolLabel(toolName, (p.input ?? {}) as Record<string, unknown>),
           done: p.state === "result" || p.state === "output" || p.state === "output-available",
         });
@@ -75,8 +71,7 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
     return {
       id: msg.id,
       role: msg.role as "user" | "assistant",
-      text: textParts.join("\n"),
-      toolCalls,
+      parts,
     };
   });
 }
@@ -84,7 +79,6 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
 
 export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   const { toast } = useToast();
-  const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const pendingImageRef = useRef<string | null>(null);
@@ -182,20 +176,13 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   useEffect(() => {
     let toolCount = 0;
     for (const msg of displayMessages) {
-      toolCount += msg.toolCalls.length;
+      toolCount += msg.parts.filter((p) => p.kind === "tool").length;
     }
     if (toolCount > lastToolCountRef.current) {
       onSlidesChanged();
       lastToolCountRef.current = toolCount;
     }
   }, [displayMessages, onSlidesChanged]);
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
 
   const handleSend = useCallback(async () => {
     const text = inputValue.trim();
@@ -254,8 +241,8 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   return (
     <div className="flex h-full w-[360px] flex-shrink-0 flex-col border-l border-border-default bg-surface-base">
       {/* Messages */}
-      <ScrollArea className="flex-1">
-        <div ref={scrollRef} className="flex flex-col gap-3 p-4">
+      <div className="flex flex-1 flex-col-reverse overflow-y-auto">
+        <div className="flex flex-col gap-3 p-4">
           {displayMessages.length === 0 && (
             <div className="flex flex-1 items-center justify-center py-20">
               <p className="text-center text-sm text-text-tertiary">
@@ -268,39 +255,42 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
               {msg.role === "user" ? (
                 <div className="flex justify-end">
                   <div className="max-w-[85%] rounded-lg bg-accent-subtle px-3 py-2 text-sm text-text-primary">
-                    {msg.text}
+                    {msg.parts
+                      .filter((p): p is DisplayPart & { kind: "text" } => p.kind === "text")
+                      .map((p) => p.text)
+                      .join("\n")}
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-1.5">
-                  {msg.toolCalls.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {msg.toolCalls.map((tc) => (
-                        <span
-                          key={tc.id}
-                          className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-[11px] text-text-secondary"
-                        >
-                          {tc.done ? (
-                            <span className="text-[10px]">&#10003;</span>
-                          ) : (
-                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-default" />
-                          )}
-                          {tc.label}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {msg.text && (
-                    <div className="max-w-[85%] rounded-lg bg-surface-raised px-3 py-2 text-sm text-text-primary">
-                      {msg.text}
-                    </div>
+                  {msg.parts.map((part, i) =>
+                    part.kind === "tool" ? (
+                      <span
+                        key={part.id}
+                        className="inline-flex w-fit items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-[11px] text-text-secondary"
+                      >
+                        {part.done ? (
+                          <span className="text-[10px]">&#10003;</span>
+                        ) : (
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-default" />
+                        )}
+                        {part.label}
+                      </span>
+                    ) : (
+                      <div
+                        key={i}
+                        className="max-w-[85%] rounded-lg bg-surface-raised px-3 py-2 text-sm text-text-primary"
+                      >
+                        {part.text}
+                      </div>
+                    ),
                   )}
                 </div>
               )}
             </div>
           ))}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Input */}
       <div className="border-t border-border-default p-3">

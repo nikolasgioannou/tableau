@@ -1,11 +1,11 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
 import {
   streamText,
+  smoothStream,
   tool,
   type ModelMessage,
   type ToolModelMessage,
   type JSONValue,
-  createUIMessageStreamResponse,
   stepCountIs,
 } from "ai";
 import { z } from "zod";
@@ -328,6 +328,7 @@ export default async function handler(
     messages,
     tools,
     stopWhen: stepCountIs(10),
+    experimental_transform: smoothStream({ chunking: "word" }),
     onFinish: async ({ text, steps }) => {
       // Save each step that has tool calls as its own assistant message
       // This preserves the tool-call → tool-result pairing the API requires
@@ -369,23 +370,5 @@ export default async function handler(
     },
   });
 
-  const stream = result.toUIMessageStream();
-
-  const response = createUIMessageStreamResponse({ stream });
-
-  // Forward the Response to Next.js res
-  res.writeHead(
-    response.status,
-    Object.fromEntries(response.headers.entries()),
-  );
-  if (response.body) {
-    const reader = response.body.getReader();
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      res.write(value);
-    }
-  }
-  res.end();
+  result.pipeUIMessageStreamToResponse(res);
 }
