@@ -236,17 +236,16 @@ export default async function handler(
     return;
   }
 
-  // The body comes from DefaultChatTransport's prepareSendMessagesRequest
-  const body = req.body as Record<string, unknown>;
+  const requestBody = req.body as Record<string, unknown>;
 
-  const presentationId = body.presentationId as string | undefined;
-  const message = body.message as string | undefined;
-  const imageUrl = body.imageUrl as string | undefined;
+  const presentationId = requestBody.presentationId as string | undefined;
+  const message = requestBody.message as string | undefined;
+  const imageUrl = requestBody.imageUrl as string | undefined;
 
   if (!presentationId || !message) {
     res.status(400).json({
       error: "Missing presentationId or message",
-      receivedKeys: Object.keys(body),
+      receivedKeys: Object.keys(requestBody),
     });
     return;
   }

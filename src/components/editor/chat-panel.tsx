@@ -1,5 +1,5 @@
 import { useChat } from "@ai-sdk/react";
-import { Paperclip, SendHorizontal } from "lucide-react";
+import { Paperclip, SendHorizontal, X } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 import { useToast } from "~/components/ui/toast";
 import { api } from "~/utils/api";
 import { type UIMessage, DefaultChatTransport } from "ai";
@@ -16,6 +17,14 @@ import { type UIMessage, DefaultChatTransport } from "ai";
 type ChatPanelProps = {
   presentationId: string;
   onSlidesChanged: () => void;
+};
+
+type StreamingToolPart = {
+  type: string;
+  toolCallId: string;
+  toolName?: string;
+  state: string;
+  input?: Record<string, unknown>;
 };
 
 type DisplayPart =
@@ -54,13 +63,7 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
       if (part.type === "text" && part.text) {
         parts.push({ kind: "text", text: part.text });
       } else if (part.type.startsWith("tool-")) {
-        const p = part as {
-          type: string;
-          toolCallId: string;
-          toolName?: string;
-          state: string;
-          input?: Record<string, unknown>;
-        };
+        const p = part as StreamingToolPart;
         const toolName = p.toolName ?? part.type.replace("tool-", "");
         parts.push({
           kind: "tool",
@@ -311,9 +314,9 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
               </span>
               <button
                 onClick={clearError}
-                className="text-destructive-default/60 hover:text-destructive-default shrink-0 text-xs"
+                className="text-destructive-default/60 hover:text-destructive-default shrink-0"
               >
-                &#x2715;
+                <X size={14} />
               </button>
             </div>
           )}
@@ -329,7 +332,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
               onClick={() => setPendingImage(null)}
               className="text-text-tertiary hover:text-text-primary"
             >
-              &#x2715;
+              <X size={12} />
             </button>
           </div>
         )}
@@ -341,14 +344,14 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             onChange={handleFileChange}
             className="hidden"
           />
-          <input
+          <Input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Describe your slides..."
             disabled={isStreaming}
-            className="border-border-default bg-surface-base text-text-primary placeholder:text-text-tertiary focus:border-border-strong h-9 flex-1 rounded-md border px-3 text-sm disabled:opacity-50"
+            className="flex-1"
           />
           <Button
             variant="outline"

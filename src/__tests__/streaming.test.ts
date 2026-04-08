@@ -131,7 +131,7 @@ describe("chat display during streaming", () => {
       toolCallId: "tc_1",
       toolName: "addSlide",
       state: "call",
-      input: { html: "<div>Test</div>", description: "test" },
+      input: { body: "<div>Test</div>", description: "test" },
     };
 
     const isDone =
