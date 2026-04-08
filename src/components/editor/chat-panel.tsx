@@ -2,6 +2,7 @@ import { useChat } from "@ai-sdk/react";
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -100,13 +101,51 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const pendingImageRef = useRef<string | null>(null);
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Keep ref in sync for closure in transport
+  useEffect(() => {
+    pendingImageRef.current = pendingImage;
+  }, [pendingImage]);
+
+  const presentationIdRef = useRef(presentationId);
+  useEffect(() => {
+    presentationIdRef.current = presentationId;
+  }, [presentationId]);
 
   // Load existing messages from DB
   const { data: dbMessages } = api.chat.getMessages.useQuery({
     presentationId,
   });
+
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/ai/slide-chat",
+        prepareSendMessagesRequest: async ({ messages: uiMessages }) => {
+          const lastMessage = uiMessages[uiMessages.length - 1];
+          const messageText =
+            lastMessage?.parts
+              .filter(
+                (p): p is { type: "text"; text: string } => p.type === "text",
+              )
+              .map((p) => p.text)
+              .join("\n") ?? "";
+
+          return {
+            body: {
+              presentationId: presentationIdRef.current,
+              message: messageText,
+              imageUrl: pendingImageRef.current ?? undefined,
+            },
+          };
+        },
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [presentationId],
+  );
 
   const {
     messages,
@@ -115,26 +154,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
     setMessages,
   } = useChat({
     id: `chat-${presentationId}`,
-    transport: new DefaultChatTransport({
-      api: "/api/ai/slide-chat",
-      body: { presentationId },
-      prepareSendMessagesRequest: async ({ messages: uiMessages, body: extraBody }) => {
-        const lastMessage = uiMessages[uiMessages.length - 1];
-        const messageText = lastMessage?.parts
-          .filter((p): p is { type: "text"; text: string } => p.type === "text")
-          .map((p) => p.text)
-          .join("\n") ?? "";
-
-        return {
-          body: {
-            ...(extraBody as Record<string, unknown>),
-            message: messageText,
-            imageUrl: pendingImage ?? undefined,
-          },
-          headers: { "Content-Type": "application/json" },
-        };
-      },
-    }),
+    transport,
     onError: (err) => {
       toast(err.message || "AI request failed", "error");
     },

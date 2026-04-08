@@ -211,13 +211,20 @@ export default async function handler(
     return;
   }
 
-  const body = req.body as {
-    presentationId: string;
-    message: string;
-    imageUrl?: string;
-  };
+  // The body comes from DefaultChatTransport's prepareSendMessagesRequest
+  const body = req.body as Record<string, unknown>;
 
-  const { presentationId, message, imageUrl } = body;
+  const presentationId = body.presentationId as string | undefined;
+  const message = body.message as string | undefined;
+  const imageUrl = body.imageUrl as string | undefined;
+
+  if (!presentationId || !message) {
+    res.status(400).json({
+      error: "Missing presentationId or message",
+      receivedKeys: Object.keys(body),
+    });
+    return;
+  }
 
   // Persist user message
   await db.chatMessage.create({
