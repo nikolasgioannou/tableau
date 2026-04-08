@@ -122,6 +122,33 @@ export default function PresentationEditorPage() {
     [activeSlide, updateSlideMutation],
   );
 
+  const inlineUpdateMutation = api.slide.update.useMutation({
+    onError: (err) => toast(err.message, "error"),
+  });
+
+  const handleInlineBodyChange = useCallback(
+    (body: string) => {
+      if (!activeSlide) return;
+      // Optimistically update the cache so code tab and other views stay in sync
+      utils.presentation.getById.setData({ id: presentationId }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          slides: old.slides.map((s) =>
+            s.id === activeSlide.id ? { ...s, body } : s,
+          ),
+        };
+      });
+      inlineUpdateMutation.mutate({ id: activeSlide.id, body });
+    },
+    [
+      activeSlide,
+      inlineUpdateMutation,
+      presentationId,
+      utils.presentation.getById,
+    ],
+  );
+
   const handleDeleteSlide = useCallback(
     (id: string) => {
       if (!presentationId) return;
@@ -206,9 +233,7 @@ export default function PresentationEditorPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() =>
-                    clearChatMutation.mutate({ presentationId })
-                  }
+                  onClick={() => clearChatMutation.mutate({ presentationId })}
                   className="gap-2"
                 >
                   <MessageSquareX size={14} />
@@ -255,6 +280,7 @@ export default function PresentationEditorPage() {
                   <SlidePreview
                     body={activeSlide.body}
                     head={activeSlide.head}
+                    onBodyChange={handleInlineBodyChange}
                   />
                 ) : (
                   <div className="text-text-tertiary flex flex-1 items-center justify-center">
