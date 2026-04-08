@@ -6,8 +6,10 @@ export const presentationRouter = createTRPCRouter({
     const presentations = await ctx.db.presentation.findMany({
       orderBy: { updatedAt: "desc" },
       include: {
+        _count: { select: { slides: true } },
         slides: {
           orderBy: { index: "asc" },
+          take: 1,
           select: { html: true },
         },
       },
@@ -15,8 +17,8 @@ export const presentationRouter = createTRPCRouter({
     return presentations.map((p) => ({
       id: p.id,
       name: p.name,
-      slideCount: p.slides.length,
-      slides: p.slides.map((s) => s.html),
+      slideCount: p._count.slides,
+      firstSlideHtml: p.slides[0]?.html ?? "",
       updatedAt: p.updatedAt,
     }));
   }),
