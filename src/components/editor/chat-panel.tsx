@@ -229,6 +229,7 @@ export function ChatPanel({
   }, [displayMessages, onSlidesChanged, onSlideSelect]);
 
   const handleSend = useCallback(async () => {
+    if (isStreaming) return;
     const text = inputValue.trim();
     if (!text && !pendingImage) return;
 
@@ -237,7 +238,7 @@ export function ChatPanel({
 
     await sendMessage({ text: messageContent });
     setPendingImage(null);
-  }, [inputValue, pendingImage, sendMessage]);
+  }, [isStreaming, inputValue, pendingImage, sendMessage]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
