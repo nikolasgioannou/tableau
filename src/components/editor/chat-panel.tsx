@@ -1,4 +1,4 @@
-import { useChat } from "ai/react";
+import { useChat } from "@ai-sdk/react";
 import {
   useCallback,
   useEffect,
@@ -6,55 +6,77 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
-import { cn } from "~/lib/cn";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { useToast } from "~/components/ui/toast";
 import { api } from "~/utils/api";
-import type { Message } from "ai";
-
-type ToolInvocation = {
-  toolCallId: string;
-  toolName: string;
-  args: Record<string, unknown>;
-  state: "call" | "result" | "partial-call";
-  result?: Record<string, unknown>;
-};
+import { type UIMessage, DefaultChatTransport } from "ai";
 
 type ChatPanelProps = {
   presentationId: string;
   onSlidesChanged: () => void;
 };
 
-function ToolCallChip({ invocation }: { invocation: ToolInvocation }) {
-  const { toolName, args } = invocation;
-  let label = toolName;
+type DisplayMessage = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  toolCalls: Array<{
+    id: string;
+    toolName: string;
+    label: string;
+    done: boolean;
+  }>;
+};
 
+function getToolLabel(toolName: string, input: Record<string, unknown>): string {
   if (toolName === "updateSlide") {
-    const idx = args.slideIndex as number;
-    label = `Updated slide ${idx + 1}`;
+    return `Updated slide ${(input.slideIndex as number) + 1}`;
   } else if (toolName === "bulkUpdateSlides") {
-    const updates = args.updates as Array<unknown>;
-    label = `Bulk updated ${updates.length} slides`;
+    return `Bulk updated ${(input.updates as Array<unknown>).length} slides`;
   } else if (toolName === "addSlide") {
-    label = "Added new slide";
+    return "Added new slide";
   } else if (toolName === "deleteSlide") {
-    const idx = args.slideIndex as number;
-    label = `Deleted slide ${idx + 1}`;
+    return `Deleted slide ${(input.slideIndex as number) + 1}`;
   } else if (toolName === "reorderSlides") {
-    label = "Reordered slides";
+    return "Reordered slides";
   }
+  return toolName;
+}
 
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-[11px] text-text-secondary">
-      {invocation.state === "call" ? (
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-default" />
-      ) : (
-        <span className="text-[10px]">&#10003;</span>
-      )}
-      {label}
-    </span>
-  );
+function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
+  return messages.map((msg) => {
+    const textParts: string[] = [];
+    const toolCalls: DisplayMessage["toolCalls"] = [];
+
+    for (const part of msg.parts) {
+      if (part.type === "text") {
+        textParts.push(part.text);
+      } else if (part.type.startsWith("tool-")) {
+        const p = part as {
+          type: string;
+          toolCallId: string;
+          toolName?: string;
+          state: string;
+          input?: Record<string, unknown>;
+        };
+        const toolName = p.toolName ?? part.type.replace("tool-", "");
+        toolCalls.push({
+          id: p.toolCallId,
+          toolName,
+          label: getToolLabel(toolName, (p.input ?? {}) as Record<string, unknown>),
+          done: p.state === "result" || p.state === "output",
+        });
+      }
+    }
+
+    return {
+      id: msg.id,
+      role: msg.role as "user" | "assistant",
+      text: textParts.join("\n"),
+      toolCalls,
+    };
+  });
 }
 
 function PaperclipIcon() {
@@ -78,6 +100,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Load existing messages from DB
@@ -85,63 +108,81 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
     presentationId,
   });
 
-  // Convert DB messages to AI SDK format for initial display
-  const initialMessages: Message[] = (dbMessages ?? []).map((msg) => ({
-    id: msg.id,
-    role: msg.role as "user" | "assistant",
-    content: msg.content,
-    toolInvocations: msg.toolCalls.map((tc) => ({
-      toolCallId: tc.id,
-      toolName: tc.toolName,
-      args: JSON.parse(tc.input) as Record<string, unknown>,
-      state: "result" as const,
-      result: JSON.parse(tc.output) as Record<string, unknown>,
-    })),
-  }));
-
   const {
     messages,
-    input,
-    handleInputChange,
-    isLoading,
-    append,
+    status,
+    sendMessage,
     setMessages,
   } = useChat({
-    api: "/api/ai/slide-chat",
-    body: { presentationId },
-    initialMessages: [],
-    onFinish: () => {
-      onSlidesChanged();
-    },
+    id: `chat-${presentationId}`,
+    transport: new DefaultChatTransport({
+      api: "/api/ai/slide-chat",
+      body: { presentationId },
+      prepareSendMessagesRequest: async ({ messages: uiMessages, body: extraBody }) => {
+        const lastMessage = uiMessages[uiMessages.length - 1];
+        const messageText = lastMessage?.parts
+          .filter((p): p is { type: "text"; text: string } => p.type === "text")
+          .map((p) => p.text)
+          .join("\n") ?? "";
+
+        return {
+          body: {
+            ...(extraBody as Record<string, unknown>),
+            message: messageText,
+            imageUrl: pendingImage ?? undefined,
+          },
+          headers: { "Content-Type": "application/json" },
+        };
+      },
+    }),
     onError: (err) => {
       toast(err.message || "AI request failed", "error");
     },
+    onFinish: () => {
+      onSlidesChanged();
+    },
   });
+
+  const isStreaming = status === "streaming" || status === "submitted";
+  const displayMessages = extractDisplayMessages(messages);
 
   // Set initial messages from DB when they load
   const hasSetInitialRef = useRef(false);
   useEffect(() => {
-    if (dbMessages && !hasSetInitialRef.current && initialMessages.length > 0) {
-      setMessages(initialMessages);
+    if (dbMessages && dbMessages.length > 0 && !hasSetInitialRef.current) {
+      const initial = dbMessages.map((msg) => ({
+        id: msg.id,
+        role: msg.role as "user" | "assistant",
+        parts: [
+          ...msg.toolCalls.map((tc) => ({
+            type: `tool-${tc.toolName}` as `tool-${string}`,
+            toolCallId: tc.id,
+            state: "output-available" as const,
+            input: JSON.parse(tc.input) as Record<string, unknown>,
+            output: JSON.parse(tc.output) as Record<string, unknown>,
+          })),
+          ...(msg.content ? [{ type: "text" as const, text: msg.content }] : []),
+        ],
+        createdAt: new Date(msg.createdAt),
+      }));
+      setMessages(initial as unknown as UIMessage[]);
       hasSetInitialRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbMessages]);
 
-  // Trigger slide refetch whenever tool invocations appear
+  // Trigger slide refetch whenever tool calls appear
   const lastToolCountRef = useRef(0);
   useEffect(() => {
     let toolCount = 0;
-    for (const msg of messages) {
-      if (msg.toolInvocations) {
-        toolCount += msg.toolInvocations.length;
-      }
+    for (const msg of displayMessages) {
+      toolCount += msg.toolCalls.length;
     }
     if (toolCount > lastToolCountRef.current) {
       onSlidesChanged();
       lastToolCountRef.current = toolCount;
     }
-  }, [messages, onSlidesChanged]);
+  }, [displayMessages, onSlidesChanged]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -151,24 +192,15 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   }, [messages]);
 
   const handleSend = useCallback(async () => {
-    const text = input.trim();
+    const text = inputValue.trim();
     if (!text && !pendingImage) return;
 
     const messageContent = text || "Here's an image to use";
+    setInputValue("");
 
-    await append({
-      role: "user",
-      content: messageContent,
-    }, {
-      body: {
-        presentationId,
-        message: messageContent,
-        imageUrl: pendingImage ?? undefined,
-      },
-    });
-
+    await sendMessage({ text: messageContent });
     setPendingImage(null);
-  }, [input, pendingImage, append, presentationId]);
+  }, [inputValue, pendingImage, sendMessage]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -180,7 +212,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
     [handleSend],
   );
 
-  const handleImageUpload = useCallback(async () => {
+  const handleImageUpload = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
@@ -208,7 +240,6 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
         toast("Image upload failed", "error");
       }
 
-      // Reset input
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
     [toast],
@@ -221,52 +252,57 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
       ta.style.height = "auto";
       ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`;
     }
-  }, [input]);
+  }, [inputValue]);
 
   return (
     <div className="flex h-full w-[360px] flex-shrink-0 flex-col border-l border-border-default bg-surface-base">
       {/* Messages */}
       <ScrollArea className="flex-1">
         <div ref={scrollRef} className="flex flex-col gap-3 p-4">
-          {messages.length === 0 && (
+          {displayMessages.length === 0 && (
             <div className="flex flex-1 items-center justify-center py-20">
               <p className="text-center text-sm text-text-tertiary">
                 Describe the slides you want to create...
               </p>
             </div>
           )}
-          {messages.map((msg) => (
+          {displayMessages.map((msg) => (
             <div key={msg.id}>
               {msg.role === "user" ? (
                 <div className="flex justify-end">
                   <div className="max-w-[85%] rounded-lg bg-accent-subtle px-3 py-2 text-sm text-text-primary">
-                    {msg.content}
+                    {msg.text}
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-1.5">
-                  {/* Tool call chips */}
-                  {msg.toolInvocations && msg.toolInvocations.length > 0 && (
+                  {msg.toolCalls.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {msg.toolInvocations.map((inv) => (
-                        <ToolCallChip
-                          key={inv.toolCallId}
-                          invocation={inv as ToolInvocation}
-                        />
+                      {msg.toolCalls.map((tc) => (
+                        <span
+                          key={tc.id}
+                          className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-[11px] text-text-secondary"
+                        >
+                          {tc.done ? (
+                            <span className="text-[10px]">&#10003;</span>
+                          ) : (
+                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-default" />
+                          )}
+                          {tc.label}
+                        </span>
                       ))}
                     </div>
                   )}
-                  {/* Text content */}
-                  {msg.content && (
+                  {msg.text && (
                     <div className="max-w-[85%] rounded-lg bg-surface-raised px-3 py-2 text-sm text-text-primary">
-                      {msg.content}
+                      {msg.text}
                     </div>
                   )}
                 </div>
               )}
             </div>
           ))}
-          {isLoading && messages[messages.length - 1]?.role === "user" && (
+          {isStreaming && displayMessages[displayMessages.length - 1]?.role === "user" && (
             <div className="flex gap-1 px-1">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-text-tertiary" />
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-text-tertiary [animation-delay:150ms]" />
@@ -299,25 +335,25 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
           />
           <button
             onClick={handleImageUpload}
-            disabled={isLoading}
+            disabled={isStreaming}
             className="mb-0.5 text-text-tertiary transition-colors hover:text-text-primary disabled:opacity-50"
           >
             <PaperclipIcon />
           </button>
           <textarea
             ref={textareaRef}
-            value={input}
-            onChange={handleInputChange}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Describe your slides..."
-            disabled={isLoading}
+            disabled={isStreaming}
             rows={1}
             className="max-h-[120px] min-h-[36px] flex-1 resize-none rounded-md border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-1 focus:ring-accent-default disabled:opacity-50"
           />
           <Button
             size="sm"
             onClick={handleSend}
-            disabled={isLoading || (!input.trim() && !pendingImage)}
+            disabled={isStreaming || (!inputValue.trim() && !pendingImage)}
             className="mb-0.5"
           >
             <SendIcon />

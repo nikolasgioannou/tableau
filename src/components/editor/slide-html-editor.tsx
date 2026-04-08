@@ -8,7 +8,7 @@ type SlideHtmlEditorProps = {
 
 export function SlideHtmlEditor({ html, onUpdate }: SlideHtmlEditorProps) {
   const [localValue, setLocalValue] = useState(html);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const prevHtmlRef = useRef(html);
 
   // Reset local state when the active slide changes (external html prop changes)
