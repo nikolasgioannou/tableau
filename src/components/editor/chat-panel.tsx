@@ -30,15 +30,18 @@ type DisplayMessage = {
 
 function getToolLabel(
   toolName: string,
-  input: Record<string, unknown>,
+  input: Record<string, unknown> | undefined,
 ): string {
-  if (toolName === "updateSlide") {
+  if (toolName === "updateSlide" && input?.slideIndex != null) {
     return `Updated slide ${(input.slideIndex as number) + 1}`;
-  } else if (toolName === "bulkUpdateSlides") {
-    return `Bulk updated ${(input.updates as Array<unknown>).length} slides`;
+  } else if (
+    toolName === "bulkUpdateSlides" &&
+    Array.isArray(input?.updates)
+  ) {
+    return `Bulk updated ${input.updates.length} slides`;
   } else if (toolName === "addSlide") {
     return "Added new slide";
-  } else if (toolName === "deleteSlide") {
+  } else if (toolName === "deleteSlide" && input?.slideIndex != null) {
     return `Deleted slide ${(input.slideIndex as number) + 1}`;
   } else if (toolName === "reorderSlides") {
     return "Reordered slides";
