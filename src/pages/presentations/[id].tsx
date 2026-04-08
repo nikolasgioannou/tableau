@@ -180,11 +180,11 @@ export default function PresentationEditorPage() {
                 )}
               </div>
 
-              <TabsContent value="preview" className="overflow-auto">
+              <TabsContent value="preview" className="flex overflow-auto">
                 {activeSlide ? (
                   <SlidePreview html={activeSlide.html} />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-text-tertiary">
+                  <div className="flex flex-1 items-center justify-center text-text-tertiary">
                     <p>No slides yet. Ask the AI to create one.</p>
                   </div>
                 )}

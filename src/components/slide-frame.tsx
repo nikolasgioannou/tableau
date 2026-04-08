@@ -77,7 +77,7 @@ export function ResponsiveSlideFrame({
   return (
     <div
       ref={containerRef}
-      className={cn("w-full", className)}
+      className={cn("w-full overflow-hidden", className)}
       style={{ aspectRatio: `${SLIDE_WIDTH} / ${SLIDE_HEIGHT}` }}
     >
       {width > 0 && (
