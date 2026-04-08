@@ -349,7 +349,7 @@ export default async function handler(
     messages,
     tools,
     stopWhen: stepCountIs(10),
-    experimental_transform: smoothStream({ chunking: "word" }),
+    experimental_transform: smoothStream({ chunking: "word", delayInMs: 30 }),
     onFinish: async ({ text, steps }) => {
       // Save each step that has tool calls as its own assistant message
       // This preserves the tool-call → tool-result pairing the API requires
