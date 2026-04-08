@@ -331,7 +331,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             </button>
           </div>
         )}
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-1.5">
           <input
             ref={fileInputRef}
             type="file"
@@ -339,13 +339,6 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             onChange={handleFileChange}
             className="hidden"
           />
-          <button
-            onClick={handleImageUpload}
-            disabled={isStreaming}
-            className="mb-0.5 text-text-tertiary transition-colors hover:text-text-primary disabled:opacity-50"
-          >
-            <Paperclip size={16} />
-          </button>
           <textarea
             ref={textareaRef}
             value={inputValue}
@@ -357,12 +350,19 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             className="max-h-[120px] min-h-[36px] flex-1 resize-none rounded-md border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-border-strong disabled:opacity-50"
           />
           <Button
+            variant="outline"
+            size="sm"
+            onClick={handleImageUpload}
+            disabled={isStreaming}
+          >
+            <Paperclip size={14} />
+          </Button>
+          <Button
             size="sm"
             onClick={handleSend}
             disabled={isStreaming || (!inputValue.trim() && !pendingImage)}
-            className="mb-0.5"
           >
-            <SendHorizontal size={16} />
+            <SendHorizontal size={14} />
           </Button>
         </div>
       </div>
