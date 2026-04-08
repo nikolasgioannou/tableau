@@ -350,7 +350,6 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Describe your slides..."
-            disabled={isStreaming}
             className="flex-1"
           />
           <Button
