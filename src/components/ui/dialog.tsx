@@ -28,16 +28,18 @@ const DialogContent = forwardRef<
 >(({ className, children, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border-default bg-surface-overlay p-6",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </DialogPrimitive.Content>
+    <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+      <DialogPrimitive.Content
+        ref={ref}
+        className={cn(
+          "pointer-events-auto w-full max-w-md rounded-lg border border-border-default bg-surface-overlay p-6 data-[state=open]:animate-[dialog-in_150ms_ease-out] data-[state=closed]:animate-[dialog-out_100ms_ease-in]",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </DialogPrimitive.Content>
+    </div>
   </DialogPortal>
 ));
 DialogContent.displayName = "DialogContent";

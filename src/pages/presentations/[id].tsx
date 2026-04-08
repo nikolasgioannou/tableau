@@ -1,4 +1,4 @@
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, Trash2 } from "lucide-react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -183,24 +183,25 @@ export default function PresentationEditorPage() {
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              Export PDF
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="outline" size="sm">
                   <Ellipsis size={16} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="text-destructive-default focus:text-destructive-default"
+                  className="gap-2 text-destructive-default focus:text-destructive-default"
                 >
-                  Delete presentation
+                  <Trash2 size={14} />
+                  Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              Export PDF
+            </Button>
           </div>
         </div>
 
