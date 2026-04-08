@@ -299,13 +299,6 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
               )}
             </div>
           ))}
-          {isStreaming && displayMessages[displayMessages.length - 1]?.role === "user" && (
-            <div className="flex gap-1 px-1">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-text-tertiary" />
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-text-tertiary [animation-delay:150ms]" />
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-text-tertiary [animation-delay:300ms]" />
-            </div>
-          )}
         </div>
       </ScrollArea>
 
