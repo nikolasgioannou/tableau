@@ -99,10 +99,10 @@ export default function PresentationEditorPage() {
     void utils.presentation.getById.invalidate({ id: presentationId });
   }, [utils.presentation.getById, presentationId]);
 
-  const handleUpdateSlideHtml = useCallback(
-    (html: string) => {
+  const handleUpdateSlideBody = useCallback(
+    (body: string) => {
       if (!activeSlide) return;
-      updateSlideMutation.mutate({ id: activeSlide.id, html });
+      updateSlideMutation.mutate({ id: activeSlide.id, body });
     },
     [activeSlide, updateSlideMutation],
   );
@@ -224,7 +224,7 @@ export default function PresentationEditorPage() {
 
               <TabsContent value="preview" className="flex overflow-auto">
                 {activeSlide ? (
-                  <SlidePreview html={activeSlide.html} />
+                  <SlidePreview body={activeSlide.body} head={activeSlide.head} />
                 ) : (
                   <div className="flex flex-1 items-center justify-center text-text-tertiary">
                     <p>No slides yet. Ask the AI to create one.</p>
@@ -236,8 +236,8 @@ export default function PresentationEditorPage() {
                 {activeSlide ? (
                   <SlideHtmlEditor
                     key={activeSlide.id}
-                    html={activeSlide.html}
-                    onUpdate={handleUpdateSlideHtml}
+                    body={activeSlide.body}
+                    onUpdate={handleUpdateSlideBody}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center bg-surface-subtle text-text-tertiary">

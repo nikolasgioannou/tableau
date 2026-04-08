@@ -74,7 +74,8 @@ export default function PresentationsPage() {
               >
                 <div className="border-b border-border-default">
                   <ResponsiveSlideFrame
-                    html={p.firstSlideHtml}
+                    body={p.firstSlideBody}
+                    head={p.firstSlideHead}
                     className="rounded-t-lg"
                   />
                 </div>

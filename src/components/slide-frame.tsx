@@ -5,14 +5,16 @@ const SLIDE_WIDTH = 1280;
 const SLIDE_HEIGHT = 720;
 
 type SlideFrameProps = {
-  html: string;
+  body: string;
+  head?: string;
   containerWidth: number;
   className?: string;
   pointerEvents?: boolean;
 };
 
 export function SlideFrame({
-  html,
+  body,
+  head = "",
   containerWidth,
   className,
   pointerEvents = false,
@@ -22,9 +24,9 @@ export function SlideFrame({
 
   const srcDoc = `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><script src="https://cdn.tailwindcss.com"></script></head>
+<head><meta charset="utf-8"><script src="https://cdn.tailwindcss.com"></script>${head}</head>
 <body style="margin:0;padding:0;width:${SLIDE_WIDTH}px;height:${SLIDE_HEIGHT}px;overflow:hidden;">
-${html}
+${body}
 </body>
 </html>`;
 
@@ -52,7 +54,8 @@ ${html}
 }
 
 export function ResponsiveSlideFrame({
-  html,
+  body,
+  head,
   className,
   pointerEvents = false,
 }: Omit<SlideFrameProps, "containerWidth">) {
@@ -82,7 +85,8 @@ export function ResponsiveSlideFrame({
     >
       {width > 0 && (
         <SlideFrame
-          html={html}
+          body={body}
+          head={head}
           containerWidth={width}
           pointerEvents={pointerEvents}
         />

@@ -15,17 +15,26 @@ export const slideRouter = createTRPCRouter({
         data: {
           presentationId: input.presentationId,
           index: nextIndex,
-          html: "",
+          body: "",
         },
       });
     }),
 
   update: publicProcedure
-    .input(z.object({ id: z.string(), html: z.string() }))
+    .input(
+      z.object({
+        id: z.string(),
+        head: z.string().optional(),
+        body: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       return ctx.db.slide.update({
         where: { id: input.id },
-        data: { html: input.html },
+        data: {
+          ...(input.body !== undefined && { body: input.body }),
+          ...(input.head !== undefined && { head: input.head }),
+        },
       });
     }),
 

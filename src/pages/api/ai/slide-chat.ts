@@ -19,8 +19,9 @@ SLIDE FORMAT:
 - Tailwind CSS is pre-loaded via CDN in every slide — use Tailwind utility classes as your primary styling approach.
 - Prefer flex layouts (flexbox) as the first choice for positioning and alignment.
 - You may also use inline styles when Tailwind classes are insufficient (e.g. very specific values).
-- No <style> blocks, no <html>/<body> tags. The slide HTML is the complete content of the <body>.
-- Google Fonts are allowed via <link> tags at the top of the HTML.
+- Each slide has two fields: \`body\` (the visible content inside <body>) and \`head\` (optional content for <head>, such as Google Font <link> tags).
+- No <style> blocks, no <html>/<body> tags in either field.
+- When using Google Fonts, put the <link> tag in \`head\` and reference the font family in \`body\` via Tailwind or inline styles.
 
 DESIGN PRINCIPLES:
 - Design with real intent: strong typographic hierarchy, deliberate whitespace, considered color choices, creative layouts.
@@ -50,10 +51,16 @@ function createSlideTools(presentationId: string) {
         "Update a single existing slide. Use for targeted edits to one specific slide.",
       inputSchema: z.object({
         slideIndex: z.number().describe("0-based slide index"),
-        html: z.string().describe("Complete new HTML for the slide"),
+        body: z.string().describe("Complete HTML content for the slide body"),
+        head: z
+          .string()
+          .optional()
+          .describe(
+            "Content for the <head> section (Google Font <link> tags, etc). Only provide when fonts or head resources are needed.",
+          ),
         reasoning: z.string().describe("One-sentence reasoning"),
       }),
-      execute: async ({ slideIndex, html, reasoning }) => {
+      execute: async ({ slideIndex, body, head, reasoning }) => {
         const slide = await db.slide.findFirst({
           where: { presentationId, index: slideIndex },
         });
@@ -62,7 +69,7 @@ function createSlideTools(presentationId: string) {
         }
         await db.slide.update({
           where: { id: slide.id },
-          data: { html },
+          data: { body, ...(head !== undefined && { head }) },
         });
         return { success: true, slideIndex, reasoning };
       },
@@ -75,7 +82,8 @@ function createSlideTools(presentationId: string) {
         updates: z.array(
           z.object({
             slideIndex: z.number(),
-            html: z.string(),
+            body: z.string(),
+            head: z.string().optional(),
             reasoning: z.string(),
           }),
         ),
@@ -101,7 +109,10 @@ function createSlideTools(presentationId: string) {
             }
             await tx.slide.update({
               where: { id: slide.id },
-              data: { html: update.html },
+              data: {
+                body: update.body,
+                ...(update.head !== undefined && { head: update.head }),
+              },
             });
             results.push({ slideIndex: update.slideIndex, success: true });
           }
@@ -114,7 +125,11 @@ function createSlideTools(presentationId: string) {
       description:
         "Add a new slide at a specified position. If insertAfterIndex is omitted, appends at the end.",
       inputSchema: z.object({
-        html: z.string().describe("Complete HTML for the new slide"),
+        body: z.string().describe("HTML content for the slide body"),
+        head: z
+          .string()
+          .optional()
+          .describe("Content for the <head> section (Google Font <link> tags, etc)"),
         insertAfterIndex: z
           .number()
           .optional()
@@ -123,7 +138,7 @@ function createSlideTools(presentationId: string) {
           ),
         description: z.string().describe("One-sentence description"),
       }),
-      execute: async ({ html, insertAfterIndex, description }) => {
+      execute: async ({ body, head, insertAfterIndex, description }) => {
         const allSlides = await db.slide.findMany({
           where: { presentationId },
           orderBy: { index: "asc" },
@@ -148,7 +163,12 @@ function createSlideTools(presentationId: string) {
               }),
             ),
           db.slide.create({
-            data: { presentationId, index: newIndex, html },
+            data: {
+              presentationId,
+              index: newIndex,
+              body,
+              ...(head !== undefined && { head }),
+            },
           }),
         ]);
 
@@ -301,7 +321,7 @@ export default async function handler(
       ? `\n\nCURRENT SLIDES (${slides.length} total):\n${slides
           .map(
             (s) =>
-              `--- Slide ${s.index} (id: ${s.id}) ---\n${s.html || "(empty)"}\n`,
+              `--- Slide ${s.index} (id: ${s.id}) ---\n${s.head ? `[head]: ${s.head}\n` : ""}[body]: ${s.body || "(empty)"}\n`,
           )
           .join("\n")}`
       : "\n\nNo slides exist yet.";

@@ -10,7 +10,8 @@ import {
 type Slide = {
   id: string;
   index: number;
-  html: string;
+  head: string;
+  body: string;
 };
 
 type SlideStripProps = {
@@ -43,7 +44,8 @@ export function SlideStrip({
               )}
             >
               <SlideFrame
-                html={slide.html}
+                body={slide.body}
+                head={slide.head}
                 containerWidth={THUMB_WIDTH}
                 className="rounded"
               />

@@ -38,9 +38,9 @@ export default async function handler(
 
       const htmlDoc = `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><script src="https://cdn.tailwindcss.com"></script></head>
+<head><meta charset="utf-8"><script src="https://cdn.tailwindcss.com"></script>${slide.head}</head>
 <body style="margin:0;padding:0;width:1280px;height:720px;overflow:hidden;">
-${slide.html}
+${slide.body}
 </body>
 </html>`;
 
@@ -81,7 +81,7 @@ ${slide.html}
 </style>
 </head>
 <body>
-${presentation.slides.map((s) => `<div class="slide">${s.html}</div>`).join("\n")}
+${presentation.slides.map((s) => `<div class="slide">${s.body}</div>`).join("\n")}
 </body>
 </html>`;
 

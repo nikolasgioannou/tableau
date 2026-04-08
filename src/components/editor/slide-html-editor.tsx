@@ -5,8 +5,8 @@ import CodeMirror from "@uiw/react-codemirror";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type SlideHtmlEditorProps = {
-  html: string;
-  onUpdate: (html: string) => void;
+  body: string;
+  onUpdate: (body: string) => void;
 };
 
 const baseTheme = EditorView.theme({
@@ -22,10 +22,10 @@ const baseTheme = EditorView.theme({
 const extensions = [htmlLang(), baseTheme];
 const darkExtensions = [htmlLang(), oneDark, baseTheme];
 
-export function SlideHtmlEditor({ html, onUpdate }: SlideHtmlEditorProps) {
-  const [localValue, setLocalValue] = useState(html);
+export function SlideHtmlEditor({ body, onUpdate }: SlideHtmlEditorProps) {
+  const [localValue, setLocalValue] = useState(body);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const prevHtmlRef = useRef(html);
+  const prevBodyRef = useRef(body);
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -41,16 +41,16 @@ export function SlideHtmlEditor({ html, onUpdate }: SlideHtmlEditorProps) {
   }, []);
 
   useEffect(() => {
-    if (html !== prevHtmlRef.current) {
-      setLocalValue(html);
-      prevHtmlRef.current = html;
+    if (body !== prevBodyRef.current) {
+      setLocalValue(body);
+      prevBodyRef.current = body;
     }
-  }, [html]);
+  }, [body]);
 
   const handleChange = useCallback(
     (value: string) => {
       setLocalValue(value);
-      prevHtmlRef.current = value;
+      prevBodyRef.current = value;
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         onUpdate(value);

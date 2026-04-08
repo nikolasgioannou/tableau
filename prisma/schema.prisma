@@ -24,7 +24,8 @@ model Presentation {
 model Slide {
     id             String   @id @default(cuid())
     index          Int
-    html           String   @default("")
+    head           String   @default("")
+    body           String   @default("")
     presentationId String
     createdAt      DateTime @default(now())
     updatedAt      DateTime @updatedAt

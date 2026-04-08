@@ -10,7 +10,7 @@ export const presentationRouter = createTRPCRouter({
         slides: {
           orderBy: { index: "asc" },
           take: 1,
-          select: { html: true },
+          select: { head: true, body: true },
         },
       },
     });
@@ -18,7 +18,8 @@ export const presentationRouter = createTRPCRouter({
       id: p.id,
       name: p.name,
       slideCount: p._count.slides,
-      firstSlideHtml: p.slides[0]?.html ?? "",
+      firstSlideHead: p.slides[0]?.head ?? "",
+      firstSlideBody: p.slides[0]?.body ?? "",
       updatedAt: p.updatedAt,
     }));
   }),
