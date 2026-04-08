@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { cn } from "~/lib/cn";
 
 const SLIDE_WIDTH = 1280;
@@ -19,16 +25,24 @@ export function SlideFrame({
   className,
   pointerEvents = false,
 }: SlideFrameProps) {
+  const [loaded, setLoaded] = useState(false);
   const scale = containerWidth / SLIDE_WIDTH;
   const containerHeight = containerWidth * (SLIDE_HEIGHT / SLIDE_WIDTH);
 
   const srcDoc = `<!DOCTYPE html>
-<html>
+<html style="background:transparent">
 <head><meta charset="utf-8"><script src="https://cdn.tailwindcss.com"></script>${head}</head>
 <body style="margin:0;padding:0;width:${SLIDE_WIDTH}px;height:${SLIDE_HEIGHT}px;overflow:hidden;">
 ${body}
 </body>
 </html>`;
+
+  // Reset loaded state when content changes
+  useEffect(() => {
+    setLoaded(false);
+  }, [body, head]);
+
+  const handleLoad = useCallback(() => setLoaded(true), []);
 
   const containerStyle: CSSProperties = {
     width: containerWidth,
@@ -44,11 +58,18 @@ ${body}
     transformOrigin: "top left",
     border: "none",
     pointerEvents: pointerEvents ? "auto" : "none",
+    opacity: loaded ? 1 : 0,
+    transition: "opacity 100ms ease-in",
   };
 
   return (
-    <div className={cn("bg-white", className)} style={containerStyle}>
-      <iframe srcDoc={srcDoc} style={iframeStyle} title="Slide preview" />
+    <div className={cn("bg-surface-base", className)} style={containerStyle}>
+      <iframe
+        srcDoc={srcDoc}
+        style={iframeStyle}
+        title="Slide preview"
+        onLoad={handleLoad}
+      />
     </div>
   );
 }
