@@ -11,11 +11,59 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
+model Presentation {
+    id        String   @id @default(cuid())
     name      String
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@index([name])
+    slides       Slide[]
+    chatMessages ChatMessage[]
+}
+
+model Slide {
+    id             String   @id @default(cuid())
+    index          Int
+    html           String   @default("")
+    presentationId String
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+
+    presentation Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+
+    @@index([presentationId, index])
+}
+
+model ChatMessage {
+    id             String   @id @default(cuid())
+    role           String
+    content        String
+    presentationId String
+    createdAt      DateTime @default(now())
+
+    presentation Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+    toolCalls    ChatToolCall[]
+
+    @@index([presentationId, createdAt])
+}
+
+model ChatToolCall {
+    id            String   @id @default(cuid())
+    toolName      String
+    input         String
+    output        String
+    chatMessageId String
+    createdAt     DateTime @default(now())
+
+    chatMessage ChatMessage @relation(fields: [chatMessageId], references: [id], onDelete: Cascade)
+
+    @@index([chatMessageId])
+}
+
+model UploadedImage {
+    id        String   @id @default(cuid())
+    filename  String
+    mimeType  String
+    base64    String
+    createdAt DateTime @default(now())
 }
