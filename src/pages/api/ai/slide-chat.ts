@@ -329,7 +329,7 @@ export default async function handler(
   // If the last user message has an image, modify it
   if (imageUrl && messages.length > 0) {
     const lastMsg = messages[messages.length - 1];
-    if (lastMsg && lastMsg.role === "user") {
+    if (lastMsg?.role === "user") {
       messages[messages.length - 1] = {
         role: "user",
         content: [

@@ -62,7 +62,7 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
         parts.push({
           kind: "tool",
           id: p.toolCallId,
-          label: getToolLabel(toolName, (p.input ?? {}) as Record<string, unknown>),
+          label: getToolLabel(toolName, p.input ?? {}),
           done: p.state === "result" || p.state === "output" || p.state === "output-available",
         });
       }
@@ -155,7 +155,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
         role: msg.role as "user" | "assistant",
         parts: [
           ...msg.toolCalls.map((tc) => ({
-            type: `tool-${tc.toolName}` as `tool-${string}`,
+            type: `tool-${tc.toolName}`,
             toolCallId: tc.toolCallId,
             state: "output-available" as const,
             input: JSON.parse(tc.input) as Record<string, unknown>,

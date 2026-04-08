@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
 /**
  * Tests for the streaming pipeline.
@@ -14,7 +14,10 @@ describe("streaming pipeline", () => {
     expect(sseEvent).toContain("data: ");
     expect(sseEvent.endsWith("\n\n")).toBe(true);
 
-    const parsed = JSON.parse(sseEvent.replace("data: ", "").trim());
+    const parsed = JSON.parse(sseEvent.replace("data: ", "").trim()) as {
+      type: string;
+      textDelta: string;
+    };
     expect(parsed.type).toBe("text-delta");
     expect(parsed.textDelta).toBe("Hello");
   });

@@ -36,7 +36,7 @@ function reconstructMessages(dbMessages: DbMessage[]): ModelMessage[] {
             type: "tool-call",
             toolCallId: tc.toolCallId,
             toolName: tc.toolName,
-            input: JSON.parse(tc.input),
+            input: JSON.parse(tc.input) as Record<string, unknown>,
           })),
         });
         messages.push({
@@ -47,7 +47,7 @@ function reconstructMessages(dbMessages: DbMessage[]): ModelMessage[] {
             toolName: tc.toolName,
             output: {
               type: "json",
-              value: JSON.parse(tc.output),
+              value: JSON.parse(tc.output) as Record<string, unknown>,
             },
           })),
         });

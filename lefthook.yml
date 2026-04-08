@@ -6,7 +6,7 @@ pre-commit:
       stage_fixed: true
     lint:
       glob: "*.{ts,tsx,js,jsx}"
-      run: bunx next lint --file {staged_files}
+      run: bunx eslint {staged_files}
   jobs:
     - name: typecheck
       commands:
