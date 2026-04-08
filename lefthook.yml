@@ -1,0 +1,22 @@
+pre-commit:
+  commands:
+    format:
+      glob: "*.{ts,tsx,js,jsx,mdx}"
+      run: bunx prettier --check {staged_files}
+      stage_fixed: true
+    lint:
+      glob: "*.{ts,tsx,js,jsx}"
+      run: bunx next lint --file {staged_files}
+  jobs:
+    - name: typecheck
+      commands:
+        typecheck:
+          run: bunx tsc --noEmit
+      depends_on:
+        - format
+        - lint
+
+commit-msg:
+  commands:
+    commitlint:
+      run: bunx commitlint --edit {1}

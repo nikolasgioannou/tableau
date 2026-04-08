@@ -42,5 +42,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
+# prisma generated
+/generated
+
 # idea files
 .idea
