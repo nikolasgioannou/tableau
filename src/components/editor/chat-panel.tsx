@@ -1,4 +1,5 @@
 import { useChat } from "@ai-sdk/react";
+import { Paperclip, SendHorizontal } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -80,21 +81,6 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
   });
 }
 
-function PaperclipIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M13.5 7.5l-5.793 5.793a2.828 2.828 0 01-4-4L9.5 3.5a2 2 0 012.828 2.828L6.536 12.12a1.172 1.172 0 01-1.657-1.657L10.5 4.843" />
-    </svg>
-  );
-}
-
-function SendIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M2.5 2.5L13.5 8L2.5 13.5V9L9.5 8L2.5 7V2.5Z" />
-    </svg>
-  );
-}
 
 export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   const { toast } = useToast();
@@ -358,7 +344,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             disabled={isStreaming}
             className="mb-0.5 text-text-tertiary transition-colors hover:text-text-primary disabled:opacity-50"
           >
-            <PaperclipIcon />
+            <Paperclip size={16} />
           </button>
           <textarea
             ref={textareaRef}
@@ -376,7 +362,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             disabled={isStreaming || (!inputValue.trim() && !pendingImage)}
             className="mb-0.5"
           >
-            <SendIcon />
+            <SendHorizontal size={16} />
           </Button>
         </div>
       </div>
