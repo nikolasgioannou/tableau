@@ -3,7 +3,6 @@ import { cn } from "~/lib/cn";
 
 const SLIDE_WIDTH = 1280;
 const SLIDE_HEIGHT = 720;
-const ASPECT_RATIO = SLIDE_HEIGHT / SLIDE_WIDTH;
 
 type SlideFrameProps = {
   html: string;
@@ -19,7 +18,7 @@ export function SlideFrame({
   pointerEvents = false,
 }: SlideFrameProps) {
   const scale = containerWidth / SLIDE_WIDTH;
-  const containerHeight = containerWidth * ASPECT_RATIO;
+  const containerHeight = containerWidth * (SLIDE_HEIGHT / SLIDE_WIDTH);
 
   const srcDoc = `<!DOCTYPE html>
 <html>
@@ -76,7 +75,11 @@ export function ResponsiveSlideFrame({
   }, []);
 
   return (
-    <div ref={containerRef} className={cn("w-full", className)}>
+    <div
+      ref={containerRef}
+      className={cn("w-full", className)}
+      style={{ aspectRatio: `${SLIDE_WIDTH} / ${SLIDE_HEIGHT}` }}
+    >
       {width > 0 && (
         <SlideFrame
           html={html}

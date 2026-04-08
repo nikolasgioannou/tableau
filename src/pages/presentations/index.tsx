@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { SlideFrame } from "~/components/slide-frame";
+import { ResponsiveSlideFrame } from "~/components/slide-frame";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -29,14 +29,9 @@ export default function PresentationsPage() {
     },
     onError: (err) => toast(err.message, "error"),
   });
-  const deleteMutation = api.presentation.delete.useMutation({
-    onSuccess: () => utils.presentation.list.invalidate(),
-    onError: (err) => toast(err.message, "error"),
-  });
 
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const handleCreate = () => {
     if (!newName.trim()) return;
@@ -65,7 +60,7 @@ export default function PresentationsPage() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="h-52 animate-pulse rounded-lg bg-surface-raised"
+                className="aspect-video animate-pulse rounded-lg bg-surface-raised"
               />
             ))}
           </div>
@@ -74,13 +69,12 @@ export default function PresentationsPage() {
             {presentations.map((p) => (
               <div
                 key={p.id}
-                className="group relative cursor-pointer overflow-hidden rounded-lg border border-border-default bg-surface-base transition-shadow hover:shadow-md"
+                className="cursor-pointer overflow-hidden rounded-lg border border-border-default bg-surface-base transition-shadow hover:shadow-md"
                 onClick={() => router.push(`/presentations/${p.id}`)}
               >
                 <div className="border-b border-border-default">
-                  <SlideFrame
+                  <ResponsiveSlideFrame
                     html={p.firstSlideHtml}
-                    containerWidth={320}
                     className="rounded-t-lg"
                   />
                 </div>
@@ -92,15 +86,6 @@ export default function PresentationsPage() {
                     {p.slideCount} {p.slideCount === 1 ? "slide" : "slides"}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteTarget(p.id);
-                  }}
-                  className="absolute right-2 top-2 rounded bg-surface-overlay/80 p-1 text-xs text-text-tertiary opacity-0 transition-opacity hover:text-destructive-default group-hover:opacity-100"
-                >
-                  &#x2715;
-                </button>
               </div>
             ))}
           </div>
@@ -143,38 +128,6 @@ export default function PresentationsPage() {
             </Button>
             <Button onClick={handleCreate} disabled={!newName.trim()}>
               Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete confirmation dialog */}
-      <Dialog
-        open={!!deleteTarget}
-        onOpenChange={() => setDeleteTarget(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Presentation</DialogTitle>
-            <DialogDescription>
-              This will permanently delete this presentation and all its slides.
-              This cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (deleteTarget) {
-                  deleteMutation.mutate({ id: deleteTarget });
-                  setDeleteTarget(null);
-                }
-              }}
-            >
-              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
