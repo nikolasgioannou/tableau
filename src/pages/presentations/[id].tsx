@@ -29,14 +29,6 @@ export default function PresentationEditorPage() {
     onError: (err) => toast(err.message, "error"),
   });
 
-  const addSlideMutation = api.slide.add.useMutation({
-    onSuccess: (slide) => {
-      void utils.presentation.getById.invalidate({ id: presentationId });
-      setActiveSlideId(slide.id);
-    },
-    onError: (err) => toast(err.message, "error"),
-  });
-
   const updateSlideMutation = api.slide.update.useMutation({
     onSuccess: () => {
       void utils.presentation.getById.invalidate({ id: presentationId });
@@ -98,11 +90,6 @@ export default function PresentationEditorPage() {
     },
     [presentationId, deleteSlideMutation],
   );
-
-  const handleAddSlide = useCallback(() => {
-    if (!presentationId) return;
-    addSlideMutation.mutate({ presentationId });
-  }, [presentationId, addSlideMutation]);
 
   const handleExport = useCallback(() => {
     window.open(`/api/export/${presentationId}`, "_blank");
@@ -264,7 +251,6 @@ export default function PresentationEditorPage() {
                 activeSlideId={activeSlideId}
                 onSelectSlide={setActiveSlideId}
                 onDeleteSlide={handleDeleteSlide}
-                onAddSlide={handleAddSlide}
               />
             </div>
           </div>

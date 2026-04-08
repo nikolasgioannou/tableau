@@ -1,6 +1,5 @@
 import { cn } from "~/lib/cn";
 import { SlideFrame } from "~/components/slide-frame";
-import { Button } from "~/components/ui/button";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -19,7 +18,6 @@ type SlideStripProps = {
   activeSlideId: string | null;
   onSelectSlide: (id: string) => void;
   onDeleteSlide: (id: string) => void;
-  onAddSlide: () => void;
 };
 
 const THUMB_WIDTH = 192;
@@ -29,7 +27,6 @@ export function SlideStrip({
   activeSlideId,
   onSelectSlide,
   onDeleteSlide,
-  onAddSlide,
 }: SlideStripProps) {
   return (
     <div className="flex h-full items-center gap-3 overflow-x-auto px-4 py-3">
@@ -65,14 +62,6 @@ export function SlideStrip({
           </ContextMenuContent>
         </ContextMenu>
       ))}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onAddSlide}
-        className="h-[108px] w-[192px] flex-shrink-0"
-      >
-        + Add Slide
-      </Button>
     </div>
   );
 }

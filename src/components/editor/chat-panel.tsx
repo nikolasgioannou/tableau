@@ -351,14 +351,14 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
           />
           <Button
             variant="outline"
-            size="sm"
+            size="md"
             onClick={handleImageUpload}
             disabled={isStreaming}
           >
             <Paperclip size={14} />
           </Button>
           <Button
-            size="sm"
+            size="md"
             onClick={handleSend}
             disabled={isStreaming || (!inputValue.trim() && !pendingImage)}
           >
