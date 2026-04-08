@@ -80,9 +80,11 @@
   outline: none;
 }
 
+html,
 body {
   background-color: hsl(var(--bg-primary));
   color: hsl(var(--fg-primary));
+  overscroll-behavior: none;
 }
 
 @keyframes dialog-in {

@@ -34,10 +34,7 @@ function getToolLabel(
 ): string {
   if (toolName === "updateSlide" && input?.slideIndex != null) {
     return `Updated slide ${(input.slideIndex as number) + 1}`;
-  } else if (
-    toolName === "bulkUpdateSlides" &&
-    Array.isArray(input?.updates)
-  ) {
+  } else if (toolName === "bulkUpdateSlides" && Array.isArray(input?.updates)) {
     return `Bulk updated ${input.updates.length} slides`;
   } else if (toolName === "addSlide") {
     return "Added new slide";
