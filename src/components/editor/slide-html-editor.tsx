@@ -39,7 +39,11 @@ const baseTheme = EditorView.theme({
 const extensions = [htmlLang(), baseTheme];
 const darkExtensions = [htmlLang(), oneDark, baseTheme];
 
-export function SlideHtmlEditor({ head, body, onUpdate }: SlideHtmlEditorProps) {
+export function SlideHtmlEditor({
+  head,
+  body,
+  onUpdate,
+}: SlideHtmlEditorProps) {
   const combined = combine(head, body);
   const [localValue, setLocalValue] = useState(combined);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);

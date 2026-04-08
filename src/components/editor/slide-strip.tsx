@@ -49,7 +49,7 @@ export function SlideStrip({
                 containerWidth={THUMB_WIDTH}
                 className="rounded"
               />
-              <span className="absolute bottom-1 left-1 rounded bg-surface-overlay/80 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">
+              <span className="bg-surface-overlay/80 text-text-secondary absolute bottom-1 left-1 rounded px-1.5 py-0.5 text-[10px] font-medium">
                 {slide.index + 1}
               </span>
             </button>

@@ -47,12 +47,10 @@ export default function PresentationsPage() {
       </Head>
       <div className="p-8">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-text-primary">
+          <h1 className="text-text-primary text-2xl font-semibold">
             Presentations
           </h1>
-          <Button onClick={() => setShowCreate(true)}>
-            New Presentation
-          </Button>
+          <Button onClick={() => setShowCreate(true)}>New Presentation</Button>
         </div>
 
         {isLoading ? (
@@ -60,7 +58,7 @@ export default function PresentationsPage() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="aspect-video animate-pulse rounded-lg bg-surface-raised"
+                className="bg-surface-raised aspect-video animate-pulse rounded-lg"
               />
             ))}
           </div>
@@ -69,10 +67,10 @@ export default function PresentationsPage() {
             {presentations.map((p) => (
               <div
                 key={p.id}
-                className="cursor-pointer overflow-hidden rounded-lg border border-border-default bg-surface-base transition-colors hover:border-border-strong"
+                className="border-border-default bg-surface-base hover:border-border-strong cursor-pointer overflow-hidden rounded-lg border transition-colors"
                 onClick={() => router.push(`/presentations/${p.id}`)}
               >
-                <div className="border-b border-border-default">
+                <div className="border-border-default border-b">
                   <ResponsiveSlideFrame
                     body={p.firstSlideBody}
                     head={p.firstSlideHead}
@@ -80,10 +78,10 @@ export default function PresentationsPage() {
                   />
                 </div>
                 <div className="p-3">
-                  <h3 className="truncate text-sm font-medium text-text-primary">
+                  <h3 className="text-text-primary truncate text-sm font-medium">
                     {p.name}
                   </h3>
-                  <p className="text-xs text-text-tertiary">
+                  <p className="text-text-tertiary text-xs">
                     {p.slideCount} {p.slideCount === 1 ? "slide" : "slides"}
                   </p>
                 </div>
@@ -92,7 +90,7 @@ export default function PresentationsPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="mb-4 text-text-tertiary">
+            <p className="text-text-tertiary mb-4">
               No presentations yet. Create your first one to get started.
             </p>
             <Button onClick={() => setShowCreate(true)}>

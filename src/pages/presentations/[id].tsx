@@ -80,7 +80,10 @@ export default function PresentationEditorPage() {
       setActiveSlideId(null);
       return;
     }
-    if (!activeSlideId || !presentation.slides.some((s) => s.id === activeSlideId)) {
+    if (
+      !activeSlideId ||
+      !presentation.slides.some((s) => s.id === activeSlideId)
+    ) {
       setActiveSlideId(presentation.slides[0]!.id);
     }
   }, [presentation?.slides, activeSlideId]);
@@ -134,7 +137,7 @@ export default function PresentationEditorPage() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border-default border-t-accent-default" />
+        <div className="border-border-default border-t-accent-default h-8 w-8 animate-spin rounded-full border-2" />
       </div>
     );
   }
@@ -154,7 +157,7 @@ export default function PresentationEditorPage() {
       </Head>
       <div className="flex h-screen flex-col">
         {/* Top bar */}
-        <div className="flex items-center justify-between border-b border-border-default px-4 py-2">
+        <div className="border-border-default flex items-center justify-between border-b px-4 py-2">
           <div className="flex items-center gap-2">
             {editingName ? (
               <Input
@@ -171,7 +174,7 @@ export default function PresentationEditorPage() {
             ) : (
               <button
                 onClick={handleNameEdit}
-                className="rounded px-1 py-0.5 text-sm font-medium text-text-primary hover:bg-surface-raised"
+                className="text-text-primary hover:bg-surface-raised rounded px-1 py-0.5 text-sm font-medium"
               >
                 {presentation.name}
               </button>
@@ -187,7 +190,7 @@ export default function PresentationEditorPage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="gap-2 text-destructive-default focus:text-destructive-default"
+                  className="text-destructive-default focus:text-destructive-default gap-2"
                 >
                   <Trash2 size={14} />
                   Delete
@@ -204,24 +207,31 @@ export default function PresentationEditorPage() {
         <div className="flex flex-1 overflow-hidden">
           {/* Left: slides */}
           <div className="flex flex-1 flex-col overflow-hidden">
-            <Tabs defaultValue="preview" className="flex flex-1 flex-col overflow-hidden">
-              <div className="flex items-center border-b border-border-default px-4 py-1.5">
+            <Tabs
+              defaultValue="preview"
+              className="flex flex-1 flex-col overflow-hidden"
+            >
+              <div className="border-border-default flex items-center border-b px-4 py-1.5">
                 <TabsList>
                   <TabsTrigger value="preview">Preview</TabsTrigger>
                   <TabsTrigger value="code">Code</TabsTrigger>
                 </TabsList>
                 {activeSlide && (
-                  <span className="ml-3 text-xs text-text-tertiary">
-                    Slide {activeSlide.index + 1} of {presentation.slides.length}
+                  <span className="text-text-tertiary ml-3 text-xs">
+                    Slide {activeSlide.index + 1} of{" "}
+                    {presentation.slides.length}
                   </span>
                 )}
               </div>
 
               <TabsContent value="preview" className="flex overflow-auto">
                 {activeSlide ? (
-                  <SlidePreview body={activeSlide.body} head={activeSlide.head} />
+                  <SlidePreview
+                    body={activeSlide.body}
+                    head={activeSlide.head}
+                  />
                 ) : (
-                  <div className="flex flex-1 items-center justify-center text-text-tertiary">
+                  <div className="text-text-tertiary flex flex-1 items-center justify-center">
                     <p>No slides yet. Ask the AI to create one.</p>
                   </div>
                 )}
@@ -236,7 +246,7 @@ export default function PresentationEditorPage() {
                     onUpdate={handleUpdateSlide}
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center bg-surface-subtle text-text-tertiary">
+                  <div className="bg-surface-subtle text-text-tertiary flex h-full items-center justify-center">
                     <p className="text-sm">No slide selected</p>
                   </div>
                 )}
@@ -244,7 +254,7 @@ export default function PresentationEditorPage() {
             </Tabs>
 
             {/* Slide strip */}
-            <div className="h-[140px] flex-shrink-0 border-t border-border-default">
+            <div className="border-border-default h-[140px] flex-shrink-0 border-t">
               <SlideStrip
                 slides={presentation.slides}
                 activeSlideId={activeSlideId}

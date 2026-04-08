@@ -176,14 +176,16 @@ describe("message reconstruction", () => {
             id: "db-1",
             toolCallId: "tc_aaa",
             toolName: "updateSlide",
-            input: '{"slideIndex":0,"html":"<div>A</div>","reasoning":"update"}',
+            input:
+              '{"slideIndex":0,"html":"<div>A</div>","reasoning":"update"}',
             output: '{"success":true}',
           },
           {
             id: "db-2",
             toolCallId: "tc_bbb",
             toolName: "updateSlide",
-            input: '{"slideIndex":1,"html":"<div>B</div>","reasoning":"update"}',
+            input:
+              '{"slideIndex":1,"html":"<div>B</div>","reasoning":"update"}',
             output: '{"success":true}',
           },
         ],
@@ -193,7 +195,9 @@ describe("message reconstruction", () => {
     const result = reconstructMessages(dbMessages);
 
     // assistant message has 2 tool-calls
-    const assistantContent = result[1]!.content as Array<Record<string, unknown>>;
+    const assistantContent = result[1]!.content as Array<
+      Record<string, unknown>
+    >;
     expect(assistantContent).toHaveLength(2);
     expect(assistantContent[0]!.toolCallId).toBe("tc_aaa");
     expect(assistantContent[1]!.toolCallId).toBe("tc_bbb");
@@ -230,7 +234,10 @@ describe("message reconstruction", () => {
 
     // Check no two consecutive assistant messages without tool in between
     for (let i = 1; i < result.length; i++) {
-      if (result[i]!.role === "assistant" && result[i - 1]!.role === "assistant") {
+      if (
+        result[i]!.role === "assistant" &&
+        result[i - 1]!.role === "assistant"
+      ) {
         // This is only valid if the previous one was a tool-call assistant
         // (text follows tool-result, not another assistant)
         // Actually in our new format: assistant(tool-call) -> tool -> assistant(text)

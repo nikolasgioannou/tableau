@@ -10,7 +10,7 @@ export function Sidebar() {
   const isActive = (path: string) => router.pathname.startsWith(path);
 
   return (
-    <aside className="flex h-screen w-60 flex-shrink-0 flex-col border-r border-sidebar-border bg-sidebar-bg">
+    <aside className="border-sidebar-border bg-sidebar-bg flex h-screen w-60 flex-shrink-0 flex-col border-r">
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-3">
         <Link

@@ -23,12 +23,12 @@ function SettingsRow({
     <div
       className={
         "flex items-center justify-between px-5 py-4" +
-        (isLast ? "" : " border-b border-border-default")
+        (isLast ? "" : " border-border-default border-b")
       }
     >
       <div className="mr-4">
-        <p className="text-sm font-medium text-text-primary">{label}</p>
-        <p className="text-[13px] text-text-tertiary">{description}</p>
+        <p className="text-text-primary text-sm font-medium">{label}</p>
+        <p className="text-text-tertiary text-[13px]">{description}</p>
       </div>
       {children}
     </div>
@@ -45,20 +45,23 @@ export default function SettingsPage() {
       </Head>
       <div className="flex h-full justify-center overflow-y-auto py-12">
         <div className="w-full max-w-2xl px-6">
-          <h1 className="mb-8 text-xl font-semibold text-text-primary">
+          <h1 className="text-text-primary mb-8 text-xl font-semibold">
             Settings
           </h1>
 
-          <h2 className="mb-3 text-sm font-medium text-text-secondary">
+          <h2 className="text-text-secondary mb-3 text-sm font-medium">
             Appearance
           </h2>
-          <div className="overflow-hidden rounded-lg border border-border-default bg-surface-subtle">
+          <div className="border-border-default bg-surface-subtle overflow-hidden rounded-lg border">
             <SettingsRow
               label="Interface theme"
               description="Select your preferred color scheme"
               isLast
             >
-              <Select value={mode} onValueChange={(v) => setTheme(v as ThemeMode)}>
+              <Select
+                value={mode}
+                onValueChange={(v) => setTheme(v as ThemeMode)}
+              >
                 <SelectTrigger className="w-28">
                   <SelectValue />
                 </SelectTrigger>

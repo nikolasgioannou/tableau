@@ -42,12 +42,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
+      <div className="fixed right-4 bottom-4 z-[100] flex flex-col gap-2">
         {toasts.map((t) => (
           <div
             key={t.id}
             className={cn(
-              "rounded-md border border-border-default px-4 py-2 text-sm transition-all",
+              "border-border-default rounded-md border px-4 py-2 text-sm transition-all",
               t.variant === "error"
                 ? "bg-destructive-default text-white"
                 : "bg-accent-default text-text-on-accent",

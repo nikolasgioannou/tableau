@@ -129,7 +129,9 @@ function createSlideTools(presentationId: string) {
         head: z
           .string()
           .optional()
-          .describe("Content for the <head> section (Google Font <link> tags, etc)"),
+          .describe(
+            "Content for the <head> section (Google Font <link> tags, etc)",
+          ),
         insertAfterIndex: z
           .number()
           .optional()

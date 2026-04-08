@@ -28,7 +28,10 @@ type DisplayMessage = {
   parts: DisplayPart[];
 };
 
-function getToolLabel(toolName: string, input: Record<string, unknown>): string {
+function getToolLabel(
+  toolName: string,
+  input: Record<string, unknown>,
+): string {
   if (toolName === "updateSlide") {
     return `Updated slide ${(input.slideIndex as number) + 1}`;
   } else if (toolName === "bulkUpdateSlides") {
@@ -63,7 +66,10 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
           kind: "tool",
           id: p.toolCallId,
           label: getToolLabel(toolName, p.input ?? {}),
-          done: p.state === "result" || p.state === "output" || p.state === "output-available",
+          done:
+            p.state === "result" ||
+            p.state === "output" ||
+            p.state === "output-available",
         });
       }
     }
@@ -75,7 +81,6 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
     };
   });
 }
-
 
 export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   const { toast } = useToast();
@@ -163,7 +168,9 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             input: JSON.parse(tc.input) as Record<string, unknown>,
             output: JSON.parse(tc.output) as Record<string, unknown>,
           })),
-          ...(msg.content ? [{ type: "text" as const, text: msg.content }] : []),
+          ...(msg.content
+            ? [{ type: "text" as const, text: msg.content }]
+            : []),
         ],
         createdAt: new Date(msg.createdAt),
       }));
@@ -244,13 +251,13 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   );
 
   return (
-    <div className="flex h-full w-[360px] flex-shrink-0 flex-col border-l border-border-default bg-surface-base">
+    <div className="border-border-default bg-surface-base flex h-full w-[360px] flex-shrink-0 flex-col border-l">
       {/* Messages */}
       <div className="flex flex-1 flex-col-reverse overflow-y-auto">
         <div className="flex flex-col gap-3 p-4">
           {displayMessages.length === 0 && (
             <div className="flex flex-1 items-center justify-center py-20">
-              <p className="text-center text-sm text-text-tertiary">
+              <p className="text-text-tertiary text-center text-sm">
                 Describe the slides you want to create...
               </p>
             </div>
@@ -259,9 +266,12 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             <div key={msg.id}>
               {msg.role === "user" ? (
                 <div className="flex justify-end">
-                  <div className="max-w-[85%] rounded-lg bg-accent-subtle px-3 py-2 text-sm text-text-primary">
+                  <div className="bg-accent-subtle text-text-primary max-w-[85%] rounded-lg px-3 py-2 text-sm">
                     {msg.parts
-                      .filter((p): p is DisplayPart & { kind: "text" } => p.kind === "text")
+                      .filter(
+                        (p): p is DisplayPart & { kind: "text" } =>
+                          p.kind === "text",
+                      )
                       .map((p) => p.text)
                       .join("\n")}
                   </div>
@@ -272,19 +282,19 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
                     part.kind === "tool" ? (
                       <span
                         key={part.id}
-                        className="inline-flex w-fit items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-[11px] text-text-secondary"
+                        className="bg-accent-subtle text-text-secondary inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-[11px]"
                       >
                         {part.done ? (
                           <span className="text-[10px]">&#10003;</span>
                         ) : (
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-default" />
+                          <span className="bg-accent-default h-1.5 w-1.5 animate-pulse rounded-full" />
                         )}
                         {part.label}
                       </span>
                     ) : (
                       <div
                         key={i}
-                        className="max-w-[85%] rounded-lg bg-surface-raised px-3 py-2 text-sm text-text-primary"
+                        className="bg-surface-raised text-text-primary max-w-[85%] rounded-lg px-3 py-2 text-sm"
                       >
                         {part.text}
                       </div>
@@ -295,11 +305,13 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             </div>
           ))}
           {chatError && (
-            <div className="flex items-start gap-2 rounded-lg border border-destructive-default/30 bg-destructive-subtle px-3 py-2 text-sm text-destructive-default">
-              <span className="flex-1">{chatError.message || "Something went wrong. Please try again."}</span>
+            <div className="border-destructive-default/30 bg-destructive-subtle text-destructive-default flex items-start gap-2 rounded-lg border px-3 py-2 text-sm">
+              <span className="flex-1">
+                {chatError.message || "Something went wrong. Please try again."}
+              </span>
               <button
                 onClick={clearError}
-                className="shrink-0 text-xs text-destructive-default/60 hover:text-destructive-default"
+                className="text-destructive-default/60 hover:text-destructive-default shrink-0 text-xs"
               >
                 &#x2715;
               </button>
@@ -309,9 +321,9 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
       </div>
 
       {/* Input */}
-      <div className="border-t border-border-default p-3">
+      <div className="border-border-default border-t p-3">
         {pendingImage && (
-          <div className="mb-2 flex items-center gap-2 rounded bg-accent-subtle px-2 py-1 text-xs text-text-secondary">
+          <div className="bg-accent-subtle text-text-secondary mb-2 flex items-center gap-2 rounded px-2 py-1 text-xs">
             <span>Image attached</span>
             <button
               onClick={() => setPendingImage(null)}
@@ -336,7 +348,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             onKeyDown={handleKeyDown}
             placeholder="Describe your slides..."
             disabled={isStreaming}
-            className="h-9 flex-1 rounded-md border border-border-default bg-surface-base px-3 text-sm text-text-primary placeholder:text-text-tertiary focus:border-border-strong disabled:opacity-50"
+            className="border-border-default bg-surface-base text-text-primary placeholder:text-text-tertiary focus:border-border-strong h-9 flex-1 rounded-md border px-3 text-sm disabled:opacity-50"
           />
           <Button
             variant="outline"

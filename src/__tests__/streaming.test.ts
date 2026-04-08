@@ -37,7 +37,10 @@ describe("streaming pipeline", () => {
     const parsed = sseStream
       .split("\n\n")
       .filter((line) => line.startsWith("data: "))
-      .map((line) => JSON.parse(line.replace("data: ", "")) as Record<string, unknown>);
+      .map(
+        (line) =>
+          JSON.parse(line.replace("data: ", "")) as Record<string, unknown>,
+      );
 
     expect(parsed).toHaveLength(4);
     expect(parsed[0]!.type).toBe("text-start");
@@ -75,7 +78,13 @@ describe("streaming pipeline", () => {
       // After text-start: empty text part
       [{ id: "1", role: "assistant", parts: [{ type: "text", text: "" }] }],
       // After first delta
-      [{ id: "1", role: "assistant", parts: [{ type: "text", text: "Hello " }] }],
+      [
+        {
+          id: "1",
+          role: "assistant",
+          parts: [{ type: "text", text: "Hello " }],
+        },
+      ],
       // After second delta
       [
         {
@@ -133,7 +142,10 @@ describe("chat display during streaming", () => {
     expect(isDone).toBe(false);
 
     // After completion
-    const completedToolPart = { ...streamingToolPart, state: "output-available" };
+    const completedToolPart = {
+      ...streamingToolPart,
+      state: "output-available",
+    };
     const isDoneAfter =
       completedToolPart.state === "result" ||
       completedToolPart.state === "output" ||

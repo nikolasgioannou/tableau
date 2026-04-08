@@ -14,7 +14,7 @@ const DialogOverlay = forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/40 backdrop-blur-sm",
       className,
     )}
     {...props}
@@ -32,7 +32,7 @@ const DialogContent = forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          "pointer-events-auto w-full max-w-md rounded-lg border border-border-default bg-surface-overlay p-6 data-[state=open]:animate-[dialog-in_150ms_ease-out] data-[state=closed]:animate-[dialog-out_100ms_ease-in]",
+          "border-border-default bg-surface-overlay pointer-events-auto w-full max-w-md rounded-lg border p-6 data-[state=closed]:animate-[dialog-out_100ms_ease-in] data-[state=open]:animate-[dialog-in_150ms_ease-out]",
           className,
         )}
         {...props}
@@ -49,7 +49,10 @@ const DialogHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)}
+    className={cn(
+      "flex flex-col space-y-1.5 text-center sm:text-left",
+      className,
+    )}
     {...props}
   />
 );
@@ -59,7 +62,10 @@ const DialogFooter = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className,
+    )}
     {...props}
   />
 );
@@ -70,7 +76,7 @@ const DialogTitle = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-lg font-semibold text-text-primary", className)}
+    className={cn("text-text-primary text-lg font-semibold", className)}
     {...props}
   />
 ));
@@ -82,7 +88,7 @@ const DialogDescription = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-text-secondary", className)}
+    className={cn("text-text-secondary text-sm", className)}
     {...props}
   />
 ));
