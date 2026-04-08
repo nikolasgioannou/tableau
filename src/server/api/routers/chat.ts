@@ -38,6 +38,7 @@ export const chatRouter = createTRPCRouter({
         content: z.string(),
         toolCalls: z.array(
           z.object({
+            toolCallId: z.string(),
             toolName: z.string(),
             input: z.string(),
             output: z.string(),

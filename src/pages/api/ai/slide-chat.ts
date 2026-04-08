@@ -252,6 +252,8 @@ export default async function handler(
   });
 
   // Build conversation history for the AI
+  // Each assistant message with tool calls must be followed by a tool message
+  // with matching tool results. Text-only assistant messages stand alone.
   const messages: ModelMessage[] = [];
 
   for (const msg of dbMessages) {
@@ -259,25 +261,22 @@ export default async function handler(
       messages.push({ role: "user", content: msg.content });
     } else if (msg.role === "assistant") {
       if (msg.toolCalls.length > 0) {
+        // Assistant message with tool calls (no text — text comes in a separate message)
         messages.push({
           role: "assistant",
-          content: [
-            ...msg.toolCalls.map((tc) => ({
-              type: "tool-call" as const,
-              toolCallId: tc.id,
-              toolName: tc.toolName,
-              input: JSON.parse(tc.input) as unknown,
-            })),
-            ...(msg.content
-              ? [{ type: "text" as const, text: msg.content }]
-              : []),
-          ],
+          content: msg.toolCalls.map((tc) => ({
+            type: "tool-call" as const,
+            toolCallId: tc.toolCallId,
+            toolName: tc.toolName,
+            input: JSON.parse(tc.input) as unknown,
+          })),
         });
+        // Matching tool results
         const toolMsg: ToolModelMessage = {
           role: "tool",
           content: msg.toolCalls.map((tc) => ({
             type: "tool-result" as const,
-            toolCallId: tc.id,
+            toolCallId: tc.toolCallId,
             toolName: tc.toolName,
             output: {
               type: "json" as const,
@@ -286,6 +285,10 @@ export default async function handler(
           })),
         };
         messages.push(toolMsg);
+        // If there's also text content, add it as a separate assistant message
+        if (msg.content) {
+          messages.push({ role: "assistant", content: msg.content });
+        }
       } else {
         messages.push({ role: "assistant", content: msg.content });
       }
@@ -326,35 +329,43 @@ export default async function handler(
     tools,
     stopWhen: stepCountIs(10),
     onFinish: async ({ text, steps }) => {
-      const allToolCalls: Array<{
-        toolName: string;
-        input: string;
-        output: string;
-      }> = [];
-
+      // Save each step that has tool calls as its own assistant message
+      // This preserves the tool-call → tool-result pairing the API requires
       for (const step of steps) {
-        for (const tc of step.staticToolCalls) {
-          const toolResult = step.staticToolResults.find(
-            (tr) => tr.toolCallId === tc.toolCallId,
-          );
-          allToolCalls.push({
-            toolName: tc.toolName,
-            input: JSON.stringify(tc.input),
-            output: JSON.stringify(toolResult?.output ?? {}),
+        if (step.staticToolCalls.length > 0) {
+          await db.chatMessage.create({
+            data: {
+              presentationId,
+              role: "assistant",
+              content: "",
+              toolCalls: {
+                create: step.staticToolCalls.map((tc) => {
+                  const toolResult = step.staticToolResults.find(
+                    (tr) => tr.toolCallId === tc.toolCallId,
+                  );
+                  return {
+                    toolCallId: tc.toolCallId,
+                    toolName: tc.toolName,
+                    input: JSON.stringify(tc.input),
+                    output: JSON.stringify(toolResult?.output ?? {}),
+                  };
+                }),
+              },
+            },
           });
         }
       }
 
-      await db.chatMessage.create({
-        data: {
-          presentationId,
-          role: "assistant",
-          content: text,
-          toolCalls: {
-            create: allToolCalls,
+      // Save the final text response as a separate message
+      if (text) {
+        await db.chatMessage.create({
+          data: {
+            presentationId,
+            role: "assistant",
+            content: text,
           },
-        },
-      });
+        });
+      }
     },
   });
 

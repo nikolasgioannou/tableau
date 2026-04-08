@@ -67,7 +67,7 @@ function extractDisplayMessages(messages: UIMessage[]): DisplayMessage[] {
           id: p.toolCallId,
           toolName,
           label: getToolLabel(toolName, (p.input ?? {}) as Record<string, unknown>),
-          done: p.state === "result" || p.state === "output",
+          done: p.state === "result" || p.state === "output" || p.state === "output-available",
         });
       }
     }
@@ -162,7 +162,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
         parts: [
           ...msg.toolCalls.map((tc) => ({
             type: `tool-${tc.toolName}` as `tool-${string}`,
-            toolCallId: tc.id,
+            toolCallId: tc.toolCallId,
             state: "output-available" as const,
             input: JSON.parse(tc.input) as Record<string, unknown>,
             output: JSON.parse(tc.output) as Record<string, unknown>,

@@ -49,6 +49,7 @@ model ChatMessage {
 
 model ChatToolCall {
     id            String   @id @default(cuid())
+    toolCallId    String
     toolName      String
     input         String
     output        String
