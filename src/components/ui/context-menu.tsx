@@ -13,7 +13,7 @@ const ContextMenuContent = forwardRef<
     <ContextMenuPrimitive.Content
       ref={ref}
       className={cn(
-        "z-50 min-w-[8rem] overflow-hidden rounded-md border border-border-default bg-surface-overlay p-1 shadow-md",
+        "z-50 min-w-[8rem] overflow-hidden rounded-md border border-border-default bg-surface-overlay p-1",
         className,
       )}
       {...props}

@@ -47,7 +47,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             className={cn(
-              "rounded-md px-4 py-2 text-sm shadow-lg transition-all",
+              "rounded-md border border-border-default px-4 py-2 text-sm transition-all",
               t.variant === "error"
                 ? "bg-destructive-default text-white"
                 : "bg-accent-default text-text-on-accent",

@@ -41,7 +41,7 @@ export function SlideStrip({
               className={cn(
                 "relative flex-shrink-0 cursor-pointer rounded-md border-2 transition-all hover:border-border-strong",
                 activeSlideId === slide.id
-                  ? "border-accent-default shadow-sm"
+                  ? "border-accent-default"
                   : "border-border-default",
               )}
             >

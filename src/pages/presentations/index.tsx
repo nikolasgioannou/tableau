@@ -1,6 +1,7 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ResponsiveSlideFrame } from "~/components/slide-frame";
 import { Button } from "~/components/ui/button";
 import {
@@ -15,6 +16,82 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { useToast } from "~/components/ui/toast";
 import { api } from "~/utils/api";
+
+function PresentationCard({
+  id,
+  name,
+  slideCount,
+  slides,
+}: {
+  id: string;
+  name: string;
+  slideCount: number;
+  slides: string[];
+}) {
+  const router = useRouter();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const goLeft = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setCurrentSlide((prev) => Math.max(0, prev - 1));
+    },
+    [],
+  );
+
+  const goRight = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setCurrentSlide((prev) => Math.min(slides.length - 1, prev + 1));
+    },
+    [slides.length],
+  );
+
+  const canGoLeft = currentSlide > 0;
+  const canGoRight = currentSlide < slides.length - 1;
+
+  return (
+    <div
+      className="group cursor-pointer overflow-hidden rounded-lg border border-border-default bg-surface-base transition-colors hover:border-border-strong"
+      onClick={() => router.push(`/presentations/${id}`)}
+    >
+      <div className="relative border-b border-border-default">
+        <ResponsiveSlideFrame
+          html={slides[currentSlide] ?? ""}
+          className="rounded-t-lg"
+        />
+        {slides.length > 1 && (
+          <>
+            {canGoLeft && (
+              <button
+                onClick={goLeft}
+                className="absolute left-1.5 top-1/2 -translate-y-1/2 rounded-full border border-border-default bg-surface-overlay/80 p-1 text-text-secondary opacity-0 transition-opacity hover:bg-surface-raised hover:text-text-primary group-hover:opacity-100"
+              >
+                <ChevronLeft size={14} />
+              </button>
+            )}
+            {canGoRight && (
+              <button
+                onClick={goRight}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full border border-border-default bg-surface-overlay/80 p-1 text-text-secondary opacity-0 transition-opacity hover:bg-surface-raised hover:text-text-primary group-hover:opacity-100"
+              >
+                <ChevronRight size={14} />
+              </button>
+            )}
+          </>
+        )}
+      </div>
+      <div className="p-3">
+        <h3 className="truncate text-sm font-medium text-text-primary">
+          {name}
+        </h3>
+        <p className="text-xs text-text-tertiary">
+          {slideCount} {slideCount === 1 ? "slide" : "slides"}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function PresentationsPage() {
   const router = useRouter();
@@ -67,26 +144,13 @@ export default function PresentationsPage() {
         ) : presentations && presentations.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {presentations.map((p) => (
-              <div
+              <PresentationCard
                 key={p.id}
-                className="cursor-pointer overflow-hidden rounded-lg border border-border-default bg-surface-base transition-shadow hover:shadow-md"
-                onClick={() => router.push(`/presentations/${p.id}`)}
-              >
-                <div className="border-b border-border-default">
-                  <ResponsiveSlideFrame
-                    html={p.firstSlideHtml}
-                    className="rounded-t-lg"
-                  />
-                </div>
-                <div className="p-3">
-                  <h3 className="truncate text-sm font-medium text-text-primary">
-                    {p.name}
-                  </h3>
-                  <p className="text-xs text-text-tertiary">
-                    {p.slideCount} {p.slideCount === 1 ? "slide" : "slides"}
-                  </p>
-                </div>
-              </div>
+                id={p.id}
+                name={p.name}
+                slideCount={p.slideCount}
+                slides={p.slides}
+              />
             ))}
           </div>
         ) : (
