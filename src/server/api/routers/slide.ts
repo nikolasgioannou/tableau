@@ -2,24 +2,6 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const slideRouter = createTRPCRouter({
-  add: publicProcedure
-    .input(z.object({ presentationId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const maxSlide = await ctx.db.slide.findFirst({
-        where: { presentationId: input.presentationId },
-        orderBy: { index: "desc" },
-        select: { index: true },
-      });
-      const nextIndex = maxSlide ? maxSlide.index + 1 : 0;
-      return ctx.db.slide.create({
-        data: {
-          presentationId: input.presentationId,
-          index: nextIndex,
-          body: "",
-        },
-      });
-    }),
-
   update: publicProcedure
     .input(
       z.object({
@@ -56,21 +38,4 @@ export const slideRouter = createTRPCRouter({
       );
     }),
 
-  reorder: publicProcedure
-    .input(
-      z.object({
-        presentationId: z.string(),
-        slideIds: z.array(z.string()),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      await ctx.db.$transaction(
-        input.slideIds.map((id, index) =>
-          ctx.db.slide.update({
-            where: { id },
-            data: { index },
-          }),
-        ),
-      );
-    }),
 });

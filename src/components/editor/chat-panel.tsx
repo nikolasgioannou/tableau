@@ -83,7 +83,6 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const pendingImageRef = useRef<string | null>(null);
   const [inputValue, setInputValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Keep ref in sync for closure in transport
   useEffect(() => {
@@ -317,7 +316,6 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             className="hidden"
           />
           <input
-            ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}

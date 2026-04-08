@@ -28,6 +28,13 @@ export function SlideHtmlEditor({ body, onUpdate }: SlideHtmlEditorProps) {
   const prevBodyRef = useRef(body);
   const [isDark, setIsDark] = useState(false);
 
+  // Clean up pending debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
     const observer = new MutationObserver(() => {

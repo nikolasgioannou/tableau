@@ -30,49 +30,24 @@ export default async function handler(
   const browser = await puppeteer.launch({ headless: true });
 
   try {
-    const pdfBuffers: Buffer[] = [];
-
-    for (const slide of presentation.slides) {
-      const page = await browser.newPage();
-      await page.setViewport({ width: 1280, height: 720 });
-
-      const htmlDoc = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><script src="https://cdn.tailwindcss.com"></script>${slide.head}</head>
-<body style="margin:0;padding:0;width:1280px;height:720px;overflow:hidden;">
-${slide.body}
-</body>
-</html>`;
-
-      await page.setContent(htmlDoc, { waitUntil: "networkidle0" });
-
-      const pdf = await page.pdf({
-        width: "1280px",
-        height: "720px",
-        printBackground: true,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      });
-
-      pdfBuffers.push(Buffer.from(pdf));
-      await page.close();
-    }
-
-    // If only one slide, just return its PDF
-    // For multiple slides, we'll combine by rendering all into one page sequence
-    // Since puppeteer generates one page per PDF, we'll use a single page approach
-    if (pdfBuffers.length === 0) {
+    if (presentation.slides.length === 0) {
       res.status(400).json({ error: "No slides to export" });
       return;
     }
 
-    // Re-render all slides in a single page for a proper multi-page PDF
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 720 });
+
+    const allHeadContent = presentation.slides
+      .map((s) => s.head)
+      .filter(Boolean)
+      .join("\n");
 
     const combinedHtml = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8">
 <script src="https://cdn.tailwindcss.com"></script>
+${allHeadContent}
 <style>
   @page { size: 1280px 720px; margin: 0; }
   body { margin: 0; padding: 0; }
