@@ -89,7 +89,7 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const pendingImageRef = useRef<string | null>(null);
   const [inputValue, setInputValue] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Keep ref in sync for closure in transport
   useEffect(() => {
@@ -209,8 +209,8 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   }, [inputValue, pendingImage, sendMessage]);
 
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
         e.preventDefault();
         void handleSend();
       }
@@ -250,15 +250,6 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
     },
     [toast],
   );
-
-  // Auto-resize textarea
-  useEffect(() => {
-    const ta = textareaRef.current;
-    if (ta) {
-      ta.style.height = "auto";
-      ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`;
-    }
-  }, [inputValue]);
 
   return (
     <div className="flex h-full w-[360px] flex-shrink-0 flex-col border-l border-border-default bg-surface-base">
@@ -339,15 +330,15 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
             onChange={handleFileChange}
             className="hidden"
           />
-          <textarea
-            ref={textareaRef}
+          <input
+            ref={inputRef}
+            type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Describe your slides..."
             disabled={isStreaming}
-            rows={1}
-            className="max-h-[120px] min-h-[36px] flex-1 resize-none rounded-md border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-border-strong disabled:opacity-50"
+            className="h-9 flex-1 rounded-md border border-border-default bg-surface-base px-3 text-sm text-text-primary placeholder:text-text-tertiary focus:border-border-strong disabled:opacity-50"
           />
           <Button
             variant="outline"
