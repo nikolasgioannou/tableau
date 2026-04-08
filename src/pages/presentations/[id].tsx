@@ -7,6 +7,7 @@ import { SlidePreview } from "~/components/editor/slide-preview";
 import { SlideStrip } from "~/components/editor/slide-strip";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useToast } from "~/components/ui/toast";
 import { api } from "~/utils/api";
 
@@ -47,7 +48,6 @@ export default function PresentationEditorPage() {
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const [dividerRatio, setDividerRatio] = useState(0.65);
 
   // Set active slide to first slide when data loads
   useEffect(() => {
@@ -110,36 +110,6 @@ export default function PresentationEditorPage() {
     setEditingName(false);
   }, [nameValue, presentationId, updateNameMutation]);
 
-  const handleDividerDrag = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      const startY = e.clientY;
-      const mainEl = (e.target as HTMLElement).closest("[data-main-area]");
-      if (!mainEl) return;
-      const rect = mainEl.getBoundingClientRect();
-      const totalHeight = rect.height;
-      const startRatio = dividerRatio;
-
-      const handleMouseMove = (moveEvent: MouseEvent) => {
-        const deltaY = moveEvent.clientY - startY;
-        const newRatio = Math.max(
-          0.2,
-          Math.min(0.85, startRatio + deltaY / totalHeight),
-        );
-        setDividerRatio(newRatio);
-      };
-
-      const handleMouseUp = () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    },
-    [dividerRatio],
-  );
-
   if (!presentationId) return null;
 
   if (isLoading) {
@@ -182,7 +152,7 @@ export default function PresentationEditorPage() {
             ) : (
               <button
                 onClick={handleNameEdit}
-                className="rounded px-1 py-0.5 text-sm font-medium text-text-primary hover:bg-accent-subtle"
+                className="rounded px-1 py-0.5 text-sm font-medium text-text-primary hover:bg-surface-raised"
               >
                 {presentation.name}
               </button>
@@ -196,40 +166,31 @@ export default function PresentationEditorPage() {
         {/* Main content */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left: slides */}
-          <div className="flex flex-1 flex-col overflow-hidden" data-main-area>
-            {/* Preview + HTML editor */}
-            <div className="flex flex-1 flex-col overflow-hidden">
-              {/* Preview area */}
-              <div
-                className="overflow-auto"
-                style={{ height: `${dividerRatio * 100}%` }}
-              >
-                {activeSlide ? (
-                  <SlidePreview
-                    html={activeSlide.html}
-                    slideIndex={activeSlide.index}
-                    totalSlides={presentation.slides.length}
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-text-tertiary">
-                    <p>No slide selected. Add a slide or ask the AI to create one.</p>
-                  </div>
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <Tabs defaultValue="preview" className="flex flex-1 flex-col overflow-hidden">
+              <div className="flex items-center border-b border-border-default px-4 py-1.5">
+                <TabsList>
+                  <TabsTrigger value="preview">Preview</TabsTrigger>
+                  <TabsTrigger value="code">Code</TabsTrigger>
+                </TabsList>
+                {activeSlide && (
+                  <span className="ml-3 text-xs text-text-tertiary">
+                    Slide {activeSlide.index + 1} of {presentation.slides.length}
+                  </span>
                 )}
               </div>
 
-              {/* Divider */}
-              <div
-                className="flex h-2 cursor-row-resize items-center justify-center hover:bg-accent-subtle"
-                onMouseDown={handleDividerDrag}
-              >
-                <div className="h-0.5 w-8 rounded-full bg-border-strong" />
-              </div>
+              <TabsContent value="preview" className="overflow-auto">
+                {activeSlide ? (
+                  <SlidePreview html={activeSlide.html} />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-text-tertiary">
+                    <p>No slides yet. Ask the AI to create one.</p>
+                  </div>
+                )}
+              </TabsContent>
 
-              {/* HTML editor */}
-              <div
-                className="overflow-hidden"
-                style={{ height: `${(1 - dividerRatio) * 100}%` }}
-              >
+              <TabsContent value="code" className="overflow-hidden">
                 {activeSlide ? (
                   <SlideHtmlEditor
                     key={activeSlide.id}
@@ -241,8 +202,8 @@ export default function PresentationEditorPage() {
                     <p className="text-sm">No slide selected</p>
                   </div>
                 )}
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
 
             {/* Slide strip */}
             <div className="h-[140px] flex-shrink-0 border-t border-border-default">
