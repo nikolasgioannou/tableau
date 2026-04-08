@@ -73,20 +73,15 @@ export default function PresentationEditorPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  // Set active slide to first slide when data loads
+  // Auto-select: pick first slide if none selected, or fix if active was deleted
   useEffect(() => {
-    if (presentation?.slides && presentation.slides.length > 0 && !activeSlideId) {
-      setActiveSlideId(presentation.slides[0]!.id);
+    if (!presentation?.slides) return;
+    if (presentation.slides.length === 0) {
+      setActiveSlideId(null);
+      return;
     }
-  }, [presentation?.slides, activeSlideId]);
-
-  // Handle deleted active slide
-  useEffect(() => {
-    if (presentation?.slides && activeSlideId) {
-      const exists = presentation.slides.some((s) => s.id === activeSlideId);
-      if (!exists) {
-        setActiveSlideId(presentation.slides[0]?.id ?? null);
-      }
+    if (!activeSlideId || !presentation.slides.some((s) => s.id === activeSlideId)) {
+      setActiveSlideId(presentation.slides[0]!.id);
     }
   }, [presentation?.slides, activeSlideId]);
 
@@ -99,10 +94,10 @@ export default function PresentationEditorPage() {
     void utils.presentation.getById.invalidate({ id: presentationId });
   }, [utils.presentation.getById, presentationId]);
 
-  const handleUpdateSlideBody = useCallback(
-    (body: string) => {
+  const handleUpdateSlide = useCallback(
+    (fields: { head: string; body: string }) => {
       if (!activeSlide) return;
-      updateSlideMutation.mutate({ id: activeSlide.id, body });
+      updateSlideMutation.mutate({ id: activeSlide.id, ...fields });
     },
     [activeSlide, updateSlideMutation],
   );
@@ -236,8 +231,9 @@ export default function PresentationEditorPage() {
                 {activeSlide ? (
                   <SlideHtmlEditor
                     key={activeSlide.id}
+                    head={activeSlide.head}
                     body={activeSlide.body}
-                    onUpdate={handleUpdateSlideBody}
+                    onUpdate={handleUpdateSlide}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center bg-surface-subtle text-text-tertiary">

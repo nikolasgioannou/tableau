@@ -4,10 +4,27 @@ import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const HEAD_SEPARATOR = "<!-- %%HEAD_ABOVE%% / %%BODY_BELOW%% -->";
+
 type SlideHtmlEditorProps = {
+  head: string;
   body: string;
-  onUpdate: (body: string) => void;
+  onUpdate: (fields: { head: string; body: string }) => void;
 };
+
+function combine(head: string, body: string): string {
+  if (!head.trim()) return body;
+  return `${head.trim()}\n${HEAD_SEPARATOR}\n${body}`;
+}
+
+function split(value: string): { head: string; body: string } {
+  const idx = value.indexOf(HEAD_SEPARATOR);
+  if (idx === -1) return { head: "", body: value };
+  return {
+    head: value.slice(0, idx).trim(),
+    body: value.slice(idx + HEAD_SEPARATOR.length + 1),
+  };
+}
 
 const baseTheme = EditorView.theme({
   "&": {
@@ -22,10 +39,11 @@ const baseTheme = EditorView.theme({
 const extensions = [htmlLang(), baseTheme];
 const darkExtensions = [htmlLang(), oneDark, baseTheme];
 
-export function SlideHtmlEditor({ body, onUpdate }: SlideHtmlEditorProps) {
-  const [localValue, setLocalValue] = useState(body);
+export function SlideHtmlEditor({ head, body, onUpdate }: SlideHtmlEditorProps) {
+  const combined = combine(head, body);
+  const [localValue, setLocalValue] = useState(combined);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const prevBodyRef = useRef(body);
+  const prevCombinedRef = useRef(combined);
   const [isDark, setIsDark] = useState(false);
 
   // Clean up pending debounce on unmount
@@ -48,19 +66,19 @@ export function SlideHtmlEditor({ body, onUpdate }: SlideHtmlEditorProps) {
   }, []);
 
   useEffect(() => {
-    if (body !== prevBodyRef.current) {
-      setLocalValue(body);
-      prevBodyRef.current = body;
+    if (combined !== prevCombinedRef.current) {
+      setLocalValue(combined);
+      prevCombinedRef.current = combined;
     }
-  }, [body]);
+  }, [combined]);
 
   const handleChange = useCallback(
     (value: string) => {
       setLocalValue(value);
-      prevBodyRef.current = value;
+      prevCombinedRef.current = value;
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
-        onUpdate(value);
+        onUpdate(split(value));
       }, 600);
     },
     [onUpdate],

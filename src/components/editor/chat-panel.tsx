@@ -129,14 +129,13 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   const {
     messages,
     status,
+    error: chatError,
+    clearError,
     sendMessage,
     setMessages,
   } = useChat({
     id: `chat-${presentationId}`,
     transport,
-    onError: (err) => {
-      toast(err.message || "AI request failed", "error");
-    },
     onFinish: () => {
       onSlidesChanged();
     },
@@ -145,10 +144,14 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
   const isStreaming = status === "streaming" || status === "submitted";
   const displayMessages = extractDisplayMessages(messages);
 
-  // Set initial messages from DB when they load
-  const hasSetInitialRef = useRef(false);
+  // Load chat history from DB — reset when presentationId changes
+  const loadedForRef = useRef<string | null>(null);
   useEffect(() => {
-    if (dbMessages && dbMessages.length > 0 && !hasSetInitialRef.current) {
+    if (
+      dbMessages &&
+      dbMessages.length > 0 &&
+      loadedForRef.current !== presentationId
+    ) {
       const initial = dbMessages.map((msg) => ({
         id: msg.id,
         role: msg.role as "user" | "assistant",
@@ -165,10 +168,10 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
         createdAt: new Date(msg.createdAt),
       }));
       setMessages(initial as unknown as UIMessage[]);
-      hasSetInitialRef.current = true;
+      loadedForRef.current = presentationId;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dbMessages]);
+  }, [dbMessages, presentationId]);
 
   // Trigger slide refetch whenever any tool part appears or changes state
   const toolSignatureRef = useRef("");
@@ -291,6 +294,17 @@ export function ChatPanel({ presentationId, onSlidesChanged }: ChatPanelProps) {
               )}
             </div>
           ))}
+          {chatError && (
+            <div className="flex items-start gap-2 rounded-lg border border-destructive-default/30 bg-destructive-subtle px-3 py-2 text-sm text-destructive-default">
+              <span className="flex-1">{chatError.message || "Something went wrong. Please try again."}</span>
+              <button
+                onClick={clearError}
+                className="shrink-0 text-xs text-destructive-default/60 hover:text-destructive-default"
+              >
+                &#x2715;
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
