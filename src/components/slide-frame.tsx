@@ -22,7 +22,7 @@ export function SlideFrame({
 
   const srcDoc = `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"></head>
+<head><meta charset="utf-8"><script src="https://cdn.tailwindcss.com"></script></head>
 <body style="margin:0;padding:0;width:${SLIDE_WIDTH}px;height:${SLIDE_HEIGHT}px;overflow:hidden;">
 ${html}
 </body>

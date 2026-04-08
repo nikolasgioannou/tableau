@@ -38,7 +38,7 @@ export default async function handler(
 
       const htmlDoc = `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"></head>
+<head><meta charset="utf-8"><script src="https://cdn.tailwindcss.com"></script></head>
 <body style="margin:0;padding:0;width:1280px;height:720px;overflow:hidden;">
 ${slide.html}
 </body>
@@ -72,6 +72,7 @@ ${slide.html}
     const combinedHtml = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8">
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
   @page { size: 1280px 720px; margin: 0; }
   body { margin: 0; padding: 0; }
